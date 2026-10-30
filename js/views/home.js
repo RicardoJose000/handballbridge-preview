@@ -46,24 +46,23 @@ export function renderHome(main) {
   <section class="hero" id="hero">
     <div class="hero-img" style="background-image:url('${heroImage()}')"></div>
     <div class="hero-shade"></div>
-    <div class="shell hero-grid">
-      <div class="hero-copy">
-        <div class="eyebrow" data-h>${esc(site('heroEyebrow'))}</div>
-        <h1><span class="l" data-h>${esc(site('heroA'))}</span><span class="l gold" data-h>${esc(site('heroB'))}</span></h1>
-        <p class="hero-desc" data-h>${esc(site('heroDesc'))}</p>
-        <div class="gens" data-h><div class="gens-h">${esc(generationsHead())}</div><div class="gens-list">${GROUPS.map(g => `<a class="gen" href="#/parents">${g}</a>`).join('')}</div></div>
-        <div class="flags" data-h>${ORIGIN.map(c => `<span class="flagchip" title="${esc(country(c))}">${flag(FLAG[c])}</span>`).join('')}</div>
-        <div class="hero-cta" data-h><a class="btn btn-gold btn-lg" href="#/${currentUser() ? 'account' : 'parents'}">${esc(site('registerChild'))}</a></div>
-        <div class="private" data-h>${esc(site('privateNote'))}</div>
-      </div>
-      <div class="slogan" id="slogan" aria-label="${esc(s.join(' '))}">
-        <div class="slogan-in">${s.map(x => `<span>${esc(x)}</span>`).join('')}
-          <svg class="swish" viewBox="0 0 520 72" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="gSwish" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#B97D19"/><stop offset="40%" stop-color="#FFF2A3"/><stop offset="70%" stop-color="#E9B63D"/><stop offset="100%" stop-color="#A36A12"/></linearGradient></defs><path d="M12 54 Q255 -10 508 43 Q255 5 12 54 Z" fill="url(#gSwish)"/><path d="M44 61 Q259 16 478 44" fill="none" stroke="#FFE998" stroke-width="2.4" stroke-linecap="round"/></svg>
-        </div>
+    <!-- same layout, sizes and fonts as the current hb-talents.com homepage -->
+    <div class="slogan" id="slogan" aria-label="${esc(s.join(' '))}">
+      <div class="slogan-in">${s.map(x => `<span>${esc(x)}</span>`).join('')}
+        <svg class="swish" viewBox="0 0 520 72" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="gSwish" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#B97D19"/><stop offset="40%" stop-color="#FFF2A3"/><stop offset="70%" stop-color="#E9B63D"/><stop offset="100%" stop-color="#A36A12"/></linearGradient></defs><path d="M12 54 Q255 -10 508 43 Q255 5 12 54 Z" fill="url(#gSwish)"/><path d="M44 61 Q259 16 478 44" fill="none" stroke="#FFE998" stroke-width="2.4" stroke-linecap="round"/></svg>
       </div>
     </div>
-    <div class="shell ads">${activeAds().map(adHTML).join('')}</div>
+    <div class="hero-body">
+      <div class="eyebrow" data-h>${esc(site('heroEyebrow'))}</div>
+      <h1><span class="l" data-h>${esc(site('heroA'))}</span> <span class="l gold" data-h>${esc(site('heroB'))}</span></h1>
+      <p class="hero-desc" data-h>${esc(site('heroDesc'))}</p>
+      <div class="gens" data-h><h3 class="gens-h">${esc(generationsHead())}</h3><div class="gens-list">${GROUPS.map(g => `<a class="gen" href="#/parents">${g}</a>`).join('')}</div></div>
+      <div class="flags" data-h>${ORIGIN.map(c => `<span class="flagchip" title="${esc(country(c))}">${flag(FLAG[c])}</span>`).join('')}</div>
+      <div class="hero-cta" data-h><a class="btn hero-btn" href="#/${currentUser() ? 'account' : 'parents'}">${esc(site('registerChild'))}</a></div>
+      <span class="privacybadge" data-h>${esc(site('privateNote'))}</span>
+    </div>
   </section>
+  <div class="adstrip">${activeAds().map(adHTML).join('')}</div>
 
   <div class="filmstrip" aria-hidden="true"><div class="film-track" id="filmTrack">${[...STRIP, ...STRIP].map((n, i) => (i % 3 === 2 ? `<div class="wd">${esc(s[Math.floor(i / 3) % 3])}</div>` : '') + `<div class="fr">${photo(n)}<span>HB · ${pad(i % 10 + 1)}A</span></div>`).join('')}</div></div>
 
@@ -124,13 +123,13 @@ export function renderHome(main) {
 
   if (!hasGsap() || reduced()) return done;
   const tl = gsap.timeline({ delay: filmIntro() });
-  tl.from('.hero-img', { scale: 1.14, duration: 2.4, ease: 'power2.out' }, 0)
+  // the main image is shown exactly as on the current site: no zoom, no crop change
+  tl.from('.hero-img', { opacity: 0, duration: 1.2, ease: 'power2.out' }, 0)
     .from('[data-h]', { y: 34, opacity: 0, duration: 1, stagger: .08, ease: 'expo.out', clearProps: 'transform,opacity' }, .25)
     .from('.flagchip', { y: 16, opacity: 0, scale: .8, duration: .7, stagger: .05, ease: 'back.out(2)', clearProps: 'transform,opacity' }, .9)
     .from('.slogan-in span', { opacity: 0, x: 40, filter: 'blur(6px)', duration: 1.1, stagger: .18, ease: 'power3.out' }, .6)
     .from('.swish', { clipPath: 'inset(0 100% 0 0)', duration: 1.2, ease: 'power2.inOut' }, 1.2)
     .from('.adcard', { y: 40, opacity: 0, duration: .9, stagger: .1, ease: 'expo.out', clearProps: 'transform,opacity' }, .9);
-  gsap.to('.hero-img', { yPercent: 8, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true } });
   $$('[data-r]', main).forEach(el => gsap.from(el, { y: 40, opacity: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
 
   // film strip: runs on its own and leans with scroll speed
@@ -165,15 +164,6 @@ export function renderHome(main) {
   $$('[data-count]', main).forEach(el => { const o = { v: 0 }, to = +el.dataset.count; gsap.to(o, { v: to, duration: 1.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true }, onUpdate: () => { el.textContent = Math.round(o.v); } }); });
   gsap.fromTo('.cta-bg', { scale: 1.2 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '.cta', start: 'top bottom', end: 'bottom bottom', scrub: true } });
 
-  const hero = $('#hero', main);
-  if (matchMedia('(pointer: fine)').matches) {
-    const qx = gsap.quickTo('.slogan-in', 'x', { duration: .9, ease: 'power3.out' });
-    const qy = gsap.quickTo('.slogan-in', 'y', { duration: .9, ease: 'power3.out' });
-    const ix = gsap.quickTo('.hero-img', 'x', { duration: 1.4, ease: 'power3.out' });
-    const move = e => { const px = e.clientX / innerWidth - .5, py = e.clientY / innerHeight - .5; qx(px * 22); qy(py * 14); ix(px * -14); };
-    hero.addEventListener('pointermove', move);
-    cleanups.push(() => hero.removeEventListener('pointermove', move));
-  }
   return done;
 }
 

@@ -822,3 +822,86 @@ a.gen:hover { border-color: #FFE28A; background: #263961; transform: translateY(
   .plan-b .adm-banner { height: 120px; }
   .plan-b .mosaic { grid-template-rows: 120px 120px; }
 }
+
+/* ================= homepage hero: same layout, sizes and fonts as the current hb-talents.com ================= */
+:root { --sys: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; --hpad: clamp(20px, 4vw, 76px); --npad: clamp(16px, 2.2vw, 34px); }
+body { font-family: var(--sys); }
+.brand { font-family: var(--sys); font-weight: 850; padding-top: 0; line-height: 1.1; }
+.brandlink { padding-top: 27px; }
+.brand .arc { left: 24%; top: -29px; width: 60%; height: 31px; transform: none; filter: drop-shadow(0 1px 2px rgba(255,213,69,.3)); }
+.tagline { margin-top: 7px; font-size: clamp(7px, .82vw, 10px); letter-spacing: 1.35px; line-height: 1.25; text-align: center; }
+.nav a { font-family: var(--sys); font-weight: 550; padding: 11px 8px 16px; }
+#signBtn { background: #F5DB67; box-shadow: none; color: #11213A; font-weight: 750; border-radius: 10px; padding: 0 18px; min-height: 44px; }
+body[data-view="home"] .topbar:not(.scrolled) { height: auto; padding: var(--npad) max(var(--hpad), calc((100vw - 1680px) / 2 + var(--hpad))); gap: clamp(12px, 2vw, 32px); }
+body[data-view="home"] .topbar:not(.scrolled) .nav { gap: clamp(8px, 1.3vw, 22px); }
+
+body .hero { display: block; min-height: clamp(630px, 82vh, 880px); padding: 0; background: #081735; font-family: var(--sys); }
+body .hero-img { inset: 0; background-position: center 52%; background-size: cover; }
+body .hero-shade { background: linear-gradient(90deg, rgba(3,12,32,.86) 0%, rgba(3,16,44,.68) 36%, rgba(5,19,46,.27) 70%, rgba(5,19,46,.12) 100%), linear-gradient(0deg, rgba(3,13,34,.53), transparent 35%); }
+.hero-body { position: relative; z-index: 1; max-width: 1680px; margin: calc(2 * var(--npad) + 78px + clamp(28px, 4vh, 70px)) auto 0; padding: 0 var(--hpad) 150px; text-align: left; }
+body .hero .eyebrow { color: #F5DB67; letter-spacing: 3px; font-size: 12px; font-weight: 700; }
+body .hero h1 { font: 700 clamp(39px, 5.2vw, 77px)/1.1 var(--sys); letter-spacing: -.035em; max-width: min(100%, 1080px); margin: 18px 0; color: #fff; }
+body .hero h1 .l { display: inline-block; white-space: nowrap; }
+body .hero h1 .gold { color: #F5DB67; background: none; -webkit-text-fill-color: currentColor; padding: 0; }
+body .hero-desc { max-width: min(100%, 940px); font-size: clamp(15px, 1.3vw, 20px); line-height: 1.55; color: #E0E8F8; margin: 1em 0; }
+body .hero .gens { margin: 22px 0 18px; }
+body .hero .gens-h { font: 750 16px/1.55 var(--sys); color: #F2D878; letter-spacing: .06em; margin: 0 0 17px; }
+body .hero .gens-list { gap: 7px; }
+body .hero .gen { justify-content: center; min-width: 80px; min-height: 34px; padding: 6px 10px; border: 1px solid #C6AD5B; border-radius: 7px; background: #1C2A4D; color: #fff; font-size: 12px; font-weight: 750; }
+body .hero .flags { margin: 24px 0 22px; gap: clamp(9px, 1.4vw, 20px); perspective: none; }
+body .hero .flagchip { width: auto; height: auto; padding: 6px 9px; background: rgba(10,23,55,.35); border: 1px solid rgba(255,255,255,.3); border-radius: 11px; }
+body .hero .flagchip .flagimg { width: auto; height: clamp(15.5px, 1.55vw, 26.5px); border-radius: 5px; box-shadow: none; }
+body .hero .hero-cta { margin: 26px 0 0; }
+.hero-btn { display: inline-flex; align-items: center; min-height: 44px; line-height: 1.35; padding: 12px 18px; border-radius: 10px; font-weight: 750; font-size: 15px; background: #F5DB67; color: #11213A; }
+.hero-btn:hover { filter: brightness(.96); transform: none; }
+.privacybadge { display: inline-block; margin-top: 20px; font-size: 12px; color: #DCE6FA; border: 1px solid #617393; border-radius: 8px; padding: 7px 11px; }
+
+body .slogan { position: absolute; z-index: 1; left: 64%; top: 160px; width: 31%; aspect-ratio: 1.16; margin: 0; pointer-events: none; opacity: .98; }
+body .slogan-in { position: absolute; top: 12%; left: 3%; width: 94%; transform: rotate(-10deg); display: flex; flex-direction: column; padding: 0;
+  font-family: "Brush Script MT", "Segoe Script", "URW Chancery L", "Apple Chancery", cursive; font-size: clamp(20px, 2.5vw, 52px); font-style: italic; font-weight: 500; line-height: 1.25; letter-spacing: -.025em; color: #fff; text-shadow: 1px 2px 3px #020E27, 0 0 6px #FEFEFE99; white-space: nowrap; }
+body .slogan-in span:nth-child(2) { margin-left: 0; padding-left: 4%; }
+body .slogan-in span:nth-child(3) { margin-left: 0; padding-left: 8%; }
+body .swish { position: static; width: 100%; height: clamp(16px, 3.3vw, 52px); margin-top: 2px; filter: drop-shadow(0 2px 2px #6B5019); }
+
+.adstrip { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.5vw, 24px); max-width: 1680px; margin: -112px auto 0; padding: 0 var(--hpad) 20px; }
+.adstrip .adcard, .adprev .adcard { min-height: 155px; padding: 18px 24px; gap: 18px; border: 1.5px solid #DEC66B; border-radius: 16px; background: linear-gradient(110deg, #0B1631, #203B69); box-shadow: none; }
+.adcard .ad-visual { width: auto; height: auto; }
+.adcard .ad-visual i { font-size: 52px; line-height: 1; color: #FFE26E; }
+.adcard .ad-visual img { width: 64px; height: 64px; border-radius: 12px; }
+.adcard .ad-text { gap: 7px; }
+.adcard .ad-text b { font: 700 clamp(17px, 1.8vw, 28px) var(--sys); letter-spacing: 0; }
+.adcard .ad-text span { font-size: clamp(13px, 1.2vw, 18px); color: #fff; }
+.adcard .ad-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px; border: 2px solid #FFE26E; border-radius: 9px; color: #FFE26E; font-weight: 750; background: rgba(3,12,30,.75); }
+.filmstrip { margin: 34px -30px 0; }
+
+@media (max-width: 1199px) { .hero-body { padding-bottom: 135px; } .adstrip { margin-top: -100px; } }
+@media (max-width: 950px) { body .slogan { left: 67%; top: 175px; } body .slogan-in { font-size: clamp(15px, 2.6vw, 32px); } }
+@media (max-width: 920px) { body.plan-b .hero-body { margin-top: 92px; } }
+@media (max-width: 860px) { body.plan-b .adstrip { grid-template-columns: 1fr; margin-top: -78px; } body.plan-b .adstrip .adcard { min-height: 128px; } }
+@media (max-width: 780px) {
+  body.plan-b .hero { min-height: 0; }
+  body.plan-b .hero-img { background-position: 64% center; }
+  body.plan-b .hero-shade { background: linear-gradient(90deg, rgba(3,12,32,.82), rgba(3,12,32,.36)), linear-gradient(0deg, rgba(3,12,32,.68), transparent 70%); }
+  body.plan-b .hero-body { padding: 0 clamp(16px, 4vw, 28px) 105px; }
+  body.plan-b .hero h1 { font-size: clamp(30px, 6.5vw, 52px); }
+  body.plan-b .hero-desc { font-size: clamp(15px, 2.6vw, 18px); }
+}
+@media (max-width: 650px) {
+  body.plan-b .slogan { position: relative; left: 5%; top: 0; width: 82%; aspect-ratio: auto; min-height: 240px; margin: 92px 0 -80px; }
+  body.plan-b .slogan-in { font-size: clamp(25px, 6.2vw, 42px); transform: rotate(-10deg); }
+  body.plan-b .swish { height: 34px; }
+  body.plan-b .hero-body { margin-top: 0; }
+}
+@media (max-width: 520px) {
+  body.plan-b .hero-body { padding: 0 16px 85px; }
+  body.plan-b .hero h1 { font-size: clamp(27px, 7.4vw, 38px); line-height: 1.16; letter-spacing: -.03em; }
+  body.plan-b .hero h1 .l { white-space: normal; }
+  body.plan-b .adstrip { margin-top: -35px; padding: 0 14px 20px; }
+  body.plan-b .adstrip .adcard { padding: 15px; gap: 10px; flex-wrap: wrap; }
+  body.plan-b .adcard .ad-visual i { font-size: 35px; }
+  body.plan-b .adcard .ad-btn { margin-left: auto; }
+  body.plan-b .adcard .ad-text b { font-size: 18px; }
+}
+@media (max-width: 480px) { body.plan-b .hero-img { background-position: 70% center; } }
+@media (max-width: 600px) { body.plan-b .hero .gens-list { gap: 9px; } body.plan-b .hero .gen { min-width: 63px; min-height: 30px; font-size: 10px; padding: 5px; } }
+@media (max-width: 520px) { body.plan-b .hero-cta .hero-btn { display: flex; width: 100%; justify-content: center; } }
