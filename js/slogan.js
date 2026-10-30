@@ -11,6 +11,40 @@ export const SLOGAN_DEFAULT = {
   tablet: { x: .610, y: .150, w: .330, rot: -10 },
   mobile: { x: .05, y: 0, w: .82, rot: -10 }
 };
+// fonts the administrator can choose; cy = also has Cyrillic letters (Serbian, Macedonian)
+export const SLOGAN_FONTS = [
+  { id: 'original', name: 'Original (as on your site)', css: '"Brush Script MT", "Segoe Script", "URW Chancery L", "Apple Chancery", cursive', italic: true, cy: true },
+  { id: 'marck', name: 'Marck Script', css: '"Marck Script", cursive', g: 'Marck+Script', cy: true },
+  { id: 'greatvibes', name: 'Great Vibes', css: '"Great Vibes", cursive', g: 'Great+Vibes', cy: true },
+  { id: 'caveat', name: 'Caveat', css: '"Caveat", cursive', g: 'Caveat:wght@600', cy: true },
+  { id: 'pacifico', name: 'Pacifico', css: '"Pacifico", cursive', g: 'Pacifico', cy: true },
+  { id: 'lobster', name: 'Lobster', css: '"Lobster", cursive', g: 'Lobster', cy: true },
+  { id: 'badscript', name: 'Bad Script', css: '"Bad Script", cursive', g: 'Bad+Script', cy: true },
+  { id: 'dancing', name: 'Dancing Script', css: '"Dancing Script", cursive', g: 'Dancing+Script:wght@600' },
+  { id: 'kaushan', name: 'Kaushan Script', css: '"Kaushan Script", cursive', g: 'Kaushan+Script' },
+  { id: 'allura', name: 'Allura', css: '"Allura", cursive', g: 'Allura' },
+  { id: 'satisfy', name: 'Satisfy', css: '"Satisfy", cursive', g: 'Satisfy' }
+];
+export const SLOGAN_COLORS = [['#FFFFFF', 'White'], ['#F5DB67', 'Gold'], ['#FFF2C2', 'Light gold'], ['#DCE6FA', 'Light blue']];
+export const sloganStyle = () => ({ font: 'original', color: '#FFFFFF', ...db.content.sloganStyle });
+const loaded = new Set();
+export function loadFont(id) {
+  const f = SLOGAN_FONTS.find(x => x.id === id);
+  if (!f?.g || loaded.has(id)) return;
+  loaded.add(id);
+  const l = document.createElement('link');
+  l.rel = 'stylesheet';
+  l.href = `https://fonts.googleapis.com/css2?family=${f.g}&display=swap`;
+  document.head.append(l);
+}
+export function styleSlogan(el, st = sloganStyle()) {
+  const f = SLOGAN_FONTS.find(x => x.id === st.font) || SLOGAN_FONTS[0];
+  loadFont(f.id);
+  const inner = el.firstElementChild;
+  inner.style.fontFamily = f.css;
+  inner.style.fontStyle = f.italic ? 'italic' : 'normal';
+  inner.style.color = st.color;
+}
 export const sloganCfg = () => {
   const c = db.content.sloganPos || {};
   return { desktop: { ...SLOGAN_DEFAULT.desktop, ...c.desktop }, tablet: { ...SLOGAN_DEFAULT.tablet, ...c.tablet }, mobile: { ...SLOGAN_DEFAULT.mobile, ...c.mobile } };
@@ -70,6 +104,7 @@ export function watchSlogan(box, el) {
   };
   const ro = new ResizeObserver(run);
   ro.observe(box);
+  styleSlogan(el);
   const again = () => { size = ''; run(); };
   document.fonts?.ready.then(again);
   run();

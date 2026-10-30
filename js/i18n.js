@@ -335,7 +335,11 @@ const T = {
   mCheckBody: ['A new season starts. Please sign in and confirm the club and details with one click, or update them.', 'Počinje nova sezona. Prijavite se i jednim klikom potvrdite klub i podatke ili ih ažurirajte.', 'Počinje nova sezona. Prijavite se i jednim klikom potvrdite klub i podatke ili ih ažurirajte.', 'Počinje nova sezona. Prijavite se i jednim klikom potvrdite klub i podatke ili ih ažurirajte.', 'Започнува нова сезона. Најавете се и со еден клик потврдете ги клубот и податоците или ажурирајте ги.', 'Fillon një sezon i ri. Hyni dhe konfirmoni me një klik klubin dhe të dhënat, ose përditësojini.'],
   mEventSubj: ['Invitation: {event}', 'Poziv: {event}', 'Poziv: {event}', 'Poziv: {event}', 'Покана: {event}', 'Ftesë: {event}'],
   mEventBody: ['{name} is invited to {event} in {place} on {date}. Please answer in your account under Camps and events.', '{name} je pozvan/a na {event} u mjestu {place}, {date}. Odgovorite u svom računu pod Kampovi i događaji.', '{name} je pozvan/a na {event} u mjestu {place}, {date}. Odgovorite u svom računu pod Kampovi i događanja.', '{name} je pozvan/a na {event} u mestu {place}, {date}. Odgovorite u svom nalogu pod Kampovi i događaji.', '{name} е поканет/а на {event} во {place}, {date}. Одговорете во вашиот профил под Кампови и настани.', '{name} është ftuar në {event} në {place}, më {date}. Përgjigjuni në llogarinë tuaj te Kampe dhe ngjarje.'],
-  extraB: ['Option B', 'Opcija B', 'Opcija B', 'Opcija B', 'Опција Б', 'Opsioni B']
+  extraB: ['Option B', 'Opcija B', 'Opcija B', 'Opcija B', 'Опција Б', 'Opsioni B'],
+  mDeclSubj: ['Your declaration for HandballBridge', 'Vaša izjava za HandballBridge', 'Vaša izjava za HandballBridge', 'Vaša izjava za HandballBridge', 'Вашата изјава за HandballBridge', 'Deklarata juaj për HandballBridge'],
+  mDeclBody: ['You confirmed the following declarations on HandballBridge. Please keep this email for your records.', 'Na HandballBridge ste potvrdili sljedeće izjave. Sačuvajte ovaj e-mail za svoju evidenciju.', 'Na HandballBridge ste potvrdili sljedeće izjave. Sačuvajte ovu poruku za svoju evidenciju.', 'Na HandballBridge ste potvrdili sledeće izjave. Sačuvajte ovu poruku za svoju evidenciju.', 'На HandballBridge ги потврдивте следните изјави. Зачувајте ја оваа порака за ваша евиденција.', 'Në HandballBridge konfirmuat deklaratat e mëposhtme. Ruajeni këtë email për evidencën tuaj.'],
+  mDeclNext: ['When you register a child, you receive the signed consent for that child as a PDF.', 'Kada registrujete dijete, dobit ćete potpisanu saglasnost za to dijete kao PDF.', 'Kada registrirate dijete, dobit ćete potpisanu privolu za to dijete kao PDF.', 'Kada registrujete dete, dobićete potpisanu saglasnost za to dete kao PDF.', 'Кога ќе регистрирате дете, ќе ја добиете потпишаната согласност за тоа дете како PDF.', 'Kur regjistroni një fëmijë, merrni pëlqimin e nënshkruar për atë fëmijë si PDF.'],
+  confirmedAt: ['Confirmed on {date}', 'Potvrđeno {date}', 'Potvrđeno {date}', 'Potvrđeno {date}', 'Потврдено на {date}', 'Konfirmuar më {date}']
 };
 
 // Montenegrin wording that differs from the Bosnian base
@@ -421,9 +425,12 @@ const CONSENT_ADULT = {
   sq: 'Unë, {DIJETE}, jap vullnetarisht pëlqimin që platforma HandballBridge të mbledhë, përpunojë dhe ruajë të dhënat e pyetësorit për mbajtjen dhe përditësimin e bazës dhe statistikave.\n\nDhënia e të dhënave federatave kombëtare të hendbollit është e mundur vetëm me pëlqim të veçantë, pas shqyrtimit të kërkesës dhe vendimit të administratorit.'
 };
 const pick = (map, l) => map[l] ?? map[DERIVED[l]] ?? map.en;
+// legal texts written by the administrator (privacy, terms, consent wording), per language
+export const legalText = (kind, l = current) => overrides[l]?.['legal.' + kind] ?? null;
 export function consentText({ parent, player, adult = false }, l = current) {
-  let s = adult ? pick(CONSENT_ADULT, l) : pick({ ...CONSENT_TEXT, ...CONSENT_MORE }, l);
-  if (l === 'sr') s = toCyr(s);
+  const own = legalText(adult ? 'consentAdult' : 'consent', l);
+  let s = own ?? (adult ? pick(CONSENT_ADULT, l) : pick({ ...CONSENT_TEXT, ...CONSENT_MORE }, l));
+  if (!own && l === 'sr') s = toCyr(s);
   return s.replace('{RODITELJ}', parent || '').replace('{DIJETE}', player || '');
 }
 const CONFIRM_MORE = {

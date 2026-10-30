@@ -1,5 +1,5 @@
-import { db, day, save, uid, norm, session, currentUser, userById, userByEmail, userByLogin, hashPassword, verifyPassword, issueCode, checkCode, resendWait, lockedFor, loginFailed, loginOk, log, ageOn, DOC_VERSION, DEMO_PARENT, DEMO_ADULT } from '../store.js';
-import { t, site, lang, country } from '../i18n.js';
+import { db, day, save, uid, norm, session, currentUser, userById, userByEmail, userByLogin, hashPassword, verifyPassword, issueCode, checkCode, resendWait, lockedFor, loginFailed, loginOk, log, ageOn, docVersion, DEMO_PARENT, DEMO_ADULT } from '../store.js';
+import { t, site, lang, country, legalText, fmtDT } from '../i18n.js';
 import { COUNTRIES } from '../site-data.js';
 import { isB } from '../plan.js';
 import { $, $$, esc, go, icon, field, selectField, pwField, bindPasswordUI, bindCodeInputs, codeInputsHTML, clearErrors, fieldError, formError, firstError, validEmail, pwStrongEnough, setBusy, toast, openModal, steps, note, enter, bTag } from '../ui.js';
@@ -141,8 +141,12 @@ export function renderVerify(main) {
 }
 
 /* ---------------- declarations ---------------- */
+export const legalHTML = kind => {
+  const own = legalText(kind);
+  return own ? own.split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('') : `<p>${esc(t('legalPlaceholder'))}</p>`;
+};
 function legalModal(kind) {
-  openModal({ title: t(kind), sub: `${t('version')} ${DOC_VERSION}`, html: `<div class="legal"><p>${esc(t('legalPlaceholder'))}</p><h4>1.</h4><p>…</p><h4>2.</h4><p>…</p></div><div class="modal-foot"><button class="btn btn-primary" data-close>${esc(t('close'))}</button></div>` });
+  openModal({ title: t(kind), sub: `${t('version')} ${docVersion()}`, html: `<div class="legal">${legalHTML(kind)}</div><div class="modal-foot"><button class="btn btn-primary" data-close>${esc(t('close'))}</button></div>` });
 }
 export function renderDeclarations(main) {
   const s = session.get();
@@ -156,7 +160,7 @@ export function renderDeclarations(main) {
       <label class="check big"><input type="checkbox" name="terms"><span>${esc(t('declTerms'))} <button type="button" class="link" data-legal="terms">${esc(t('read'))}</button></span></label>
       <label class="check big"><input type="checkbox" name="privacy"><span>${esc(t('declPrivacy'))} <button type="button" class="link" data-legal="privacy">${esc(t('read'))}</button></span></label>
       <label class="check big sep"><input type="checkbox" name="federation"><span>${esc(t('declFed'))}</span></label>
-      <div class="docver">${icon.file}<span>${esc(t('version'))} ${DOC_VERSION} · ${esc(u.email)}</span></div>
+      <div class="docver">${icon.file}<span>${esc(t('version'))} ${docVersion()} · ${esc(u.email)}</span></div>
       <button class="btn btn-gold btn-block" type="submit">${esc(t('activate'))}</button>
     </form>`, { kicker: t('stage3'), step: 2 });
   const f = $('#df', box);
@@ -168,12 +172,18 @@ export function renderDeclarations(main) {
     ['main', 'terms', 'privacy'].forEach(k => { if (!v[k]) { fieldError(f, k, t('vConfirm')); bad = true; } });
     if (bad) return;
     const at = Date.now();
-    const add = type => db.consents.push({ id: uid('k'), userId: u.id, playerId: null, type, version: DOC_VERSION, lang: lang(), at, status: 'given' });
+    const add = type => db.consents.push({ id: uid('k'), userId: u.id, playerId: null, type, version: docVersion(), lang: lang(), at, status: 'given' });
     add(adult ? 'self' : 'guardian'); add('terms'); add('privacy');
     if (v.federation) add('federation');
     save();
-    log('consent', `${u.first} ${u.last}`, `Declarations accepted (version ${DOC_VERSION}${v.federation ? ', incl. federation sharing' : ''})`);
-    sendMail(u.email, t('mWelcomeSubj', null, u.lang), wrapMail(u.lang, t('activated', null, u.lang), `<p>${esc(t('mWelcomeBody', null, u.lang))}</p>`), { quiet: true });
+    log('consent', `${u.first} ${u.last}`, `Declarations accepted (version ${docVersion()}${v.federation ? ', incl. federation sharing' : ''})`);
+    // the declaration is confirmed to the parent by email, in their language
+    const L = u.lang, ver = docVersion();
+    const items = [adult ? t('declSelf', null, L) : t('declGuardian', null, L), `${t('declTerms', null, L)} (${t('version', null, L)} ${ver})`, `${t('declPrivacy', null, L)} (${t('version', null, L)} ${ver})`, ...(v.federation ? [t('declFed', null, L)] : [])];
+    sendMail(u.email, t('mDeclSubj', null, L), wrapMail(L, t('declTitle', null, L), `<p>${esc(t('mDeclBody', null, L))}</p>
+      <ul class="mlist">${items.map(x => `<li>✓ ${esc(x)}</li>`).join('')}</ul>
+      <p class="small"><b>${esc(u.first)} ${esc(u.last)}</b> · ${esc(u.email)}<br>${esc(t('confirmedAt', { date: fmtDT(at, L) }, L))}</p>
+      <p>${esc(t('mWelcomeBody', null, L))}${adult ? '' : ' ' + esc(t('mDeclNext', null, L))}</p>`));
     session.set({ userId: u.id, auth: true });
     toast(t('activated'));
     go(adult ? 'account/player/new' : 'account');

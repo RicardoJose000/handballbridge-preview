@@ -1,6 +1,6 @@
 // Consent PDF in the user's language. Noto Sans is embedded so č, ć, đ, ë and Cyrillic print correctly.
 import { t, consentText, country, fmtD, fmtDT } from './i18n.js';
-import { db, DOC_VERSION, groupOf, userById } from './store.js';
+import { db, docVersion, groupOf, userById } from './store.js';
 
 let fontsB64 = null;
 async function fonts() {
@@ -42,7 +42,7 @@ export async function consentPdf(player, l) {
   doc.text(t('pdfTitle', null, l), M, 35);
   doc.setFont('hb', 'normal'); doc.setFontSize(8.5); doc.setTextColor(200, 212, 230);
   doc.text(`${t('profileId', null, l)} ${player.id}`, W - M, 15, { align: 'right' });
-  doc.text(`${t('version', null, l)} ${DOC_VERSION}`, W - M, 20, { align: 'right' });
+  doc.text(`${t('version', null, l)} ${main?.version || docVersion()}`, W - M, 20, { align: 'right' });
 
   let y = 62;
   const head = s => { doc.setFont('hb', 'bold'); doc.setFontSize(10.5); doc.setTextColor(176, 128, 26); doc.text(s.toUpperCase(), M, y); y += 7; };

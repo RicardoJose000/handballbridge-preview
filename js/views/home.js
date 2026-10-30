@@ -22,7 +22,7 @@ export const adHTML = a => `<a class="adcard" ${a.url ? `href="${esc(a.url)}" ta
 export function footer() {
   return `<footer class="foot"><div class="shell foot-in">
     <div><span class="brand small"><span class="word">Handball<b>Bridge</b></span></span><p>${esc(t('footerRights'))}</p></div>
-    <div class="foot-links"><a href="#/about">${esc(site('about'))}</a><a href="#/parents">${esc(site('parents'))}</a><a href="#/contact">${esc(site('contact'))}</a><a href="#/admin">${esc(site('adminEntry'))}</a></div>
+    <div class="foot-links"><a href="#/about">${esc(site('about'))}</a><a href="#/parents">${esc(site('parents'))}</a><a href="#/contact">${esc(site('contact'))}</a><a href="#/legal/privacy">${esc(t('privacy'))}</a><a href="#/legal/terms">${esc(t('terms'))}</a></div>
     <div class="foot-mail"><span>info@hb-talents.com</span><span>admin@hb-talents.com</span></div>
   </div><div class="shell foot-base">HandballBridge · hb-talents.com · 2026 · Preview with fictional data</div></footer>`;
 }
@@ -126,4 +126,14 @@ export function renderContact(main) {
     f.reset();
     toast(t('messageSent'));
   });
+}
+
+/* ---------------- privacy information and terms ---------------- */
+export async function renderLegal(main, [kind]) {
+  const { legalHTML } = await import('./auth.js');
+  const { docVersion } = await import('../store.js');
+  kind = kind === 'terms' ? 'terms' : 'privacy';
+  main.innerHTML = `<section class="page-hero"><div class="shell"><div class="eyebrow">HANDBALLBRIDGE · ${esc(t('version'))} ${docVersion()}</div><h1>${esc(t(kind))}</h1></div></section>
+  <section class="page"><div class="shell narrow"><article class="card legal" data-e>${legalHTML(kind)}</article></div></section>${footer()}`;
+  enter(main, '[data-e]');
 }

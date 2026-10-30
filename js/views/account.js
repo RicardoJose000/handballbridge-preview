@@ -1,4 +1,4 @@
-import { db, day, save, uid, session, currentUser, playersOf, playerById, playerConsent, consentsOf, playerStatus, groupOf, birthYear, ageOn, eighteenth, deletePlayer, deleteAccount, exportFor, hashPassword, verifyPassword, log, DOC_VERSION, SEASON } from '../store.js';
+import { db, day, save, uid, session, currentUser, playersOf, playerById, playerConsent, consentsOf, playerStatus, groupOf, birthYear, ageOn, eighteenth, deletePlayer, deleteAccount, exportFor, hashPassword, verifyPassword, log, docVersion, SEASON } from '../store.js';
 import { t, lang, LANGS, country, consentText, confirmText, fmtD, fmtDT } from '../i18n.js';
 import { ORIGIN } from '../site-data.js';
 import { isB } from '../plan.js';
@@ -125,7 +125,7 @@ function profileView(main, me, p) {
         <div><h2>${esc(p.name)}</h2><p class="muted">${esc(t('profileId'))} ${p.id} · ${groupOf(p)} · ${esc(t('registered', { date: fmtD(p.createdAt) }))}</p></div>${chip(p)}</div>
       ${p.kind === 'minor' && ageOn(p.birth) >= 17 ? `<p class="adult-note">${icon.info}<span>${esc(t('turns18', { name: p.name.split(' ')[0], date: fmtD(eighteenth(p.birth)) }))}</span></p>` : ''}
       <dl class="details">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd></div>`).join('')}</dl>
-      <div class="consent-line">${icon.shield}<span>${esc(t('ctPlayer'))}: <b>${esc(c?.status === 'given' ? t('cGiven') : t('cWithdrawn'))}</b> · ${c ? fmtDT(c.at) : ''} · ${esc(t('version'))} ${c?.version || DOC_VERSION}</span></div>
+      <div class="consent-line">${icon.shield}<span>${esc(t('ctPlayer'))}: <b>${esc(c?.status === 'given' ? t('cGiven') : t('cWithdrawn'))}</b> · ${c ? fmtDT(c.at) : ''} · ${esc(t('version'))} ${c?.version || docVersion()}</span></div>
       <div class="kid-actions">
         <a class="btn btn-gold btn-sm" href="#/account/p/${p.id}/edit">${icon.edit} ${esc(t('edit'))}</a>
         <button class="btn btn-ghost btn-sm" data-pdf>${icon.download} ${esc(t('downloadPdf'))}</button>
@@ -270,7 +270,7 @@ function review(main, me, data) {
     <div class="step-kicker">${esc(t('qStage'))}</div><h2>${esc(t('reviewTitle'))}</h2><p class="muted">${esc(t('reviewSub'))}</p>
     <dl class="details compact">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
     <h3>${esc(t('consentFor'))}</h3>
-    <div class="consent-text">${consentText({ parent: `${me.first} ${me.last}`, player: data.name, adult }).split('\n\n').map(s => `<p>${esc(s)}</p>`).join('')}<small>${esc(t('version'))} ${DOC_VERSION}</small></div>
+    <div class="consent-text">${consentText({ parent: `${me.first} ${me.last}`, player: data.name, adult }).split('\n\n').map(s => `<p>${esc(s)}</p>`).join('')}<small>${esc(t('version'))} ${docVersion()}</small></div>
     <form id="rf" novalidate><label class="check big"><input type="checkbox" name="ok"><span>${esc(t('iConsent'))}</span></label>
     <div class="row-between"><button class="btn btn-ghost" type="button" id="backq">← ${esc(t('edit'))}</button><button class="btn btn-gold" type="submit">${esc(t('confirmRegister'))}</button></div></form>
   </div></div></section>${footer()}`;
@@ -286,12 +286,12 @@ function review(main, me, data) {
     const p = { id: 'P' + String(1000 + db.players.length + 1 + Math.floor(Math.random() * 90)), kind: adult ? 'adult' : 'minor', parentId: adult ? null : me.id, userId: adult ? me.id : null, ...data, status: 'active', createdAt: Date.now(), updatedAt: Date.now(), seasonCheck: SEASON };
     while (db.players.some(x => x.id === p.id)) p.id = 'P' + Math.floor(1000 + Math.random() * 9000);
     db.players.push(p);
-    db.consents.push({ id: uid('k'), userId: me.id, playerId: p.id, type: 'player', version: DOC_VERSION, lang: lang(), at: Date.now(), status: 'given' });
+    db.consents.push({ id: uid('k'), userId: me.id, playerId: p.id, type: 'player', version: docVersion(), lang: lang(), at: Date.now(), status: 'given' });
     db.visits.funnel.finished++;
     save();
     try { const all = JSON.parse(localStorage.getItem(DKEY) || '{}'); delete all[me.id]; localStorage.setItem(DKEY, JSON.stringify(all)); } catch { /* ignore */ }
     log('player', `${me.first} ${me.last}`, `Registered ${adult ? 'adult' : 'minor'} player ${p.id} (${groupOf(p)})`);
-    log('consent', `${me.first} ${me.last}`, `Player consent given for ${p.id} (version ${DOC_VERSION})`);
+    log('consent', `${me.first} ${me.last}`, `Player consent given for ${p.id} (version ${docVersion()})`);
     const l = me.lang || lang();
     const pdf = await consentPdf(p, l);
     sendMail(me.email, t('mRegSubj', { name: p.name }, l), wrapMail(l, t('mRegTitle', null, l), `<p>${esc(confirmText(p.name, l))}</p>
@@ -379,7 +379,7 @@ function consentsTab(am, me) {
       if (!await confirmBox({ title: t('withdrawQ'), text: esc(t('withdrawD')), confirmLabel: t('withdraw'), danger: true })) return;
       c.status = 'withdrawn'; c.withdrawnAt = Date.now();
     } else {
-      db.consents.push({ ...c, id: uid('k'), status: 'given', at: Date.now(), withdrawnAt: null, version: DOC_VERSION, lang: lang() });
+      db.consents.push({ ...c, id: uid('k'), status: 'given', at: Date.now(), withdrawnAt: null, version: docVersion(), lang: lang() });
     }
     save();
     log('consent', `${me.first} ${me.last}`, `${t(CT[c.type], null, 'en')} ${c.status === 'withdrawn' ? 'withdrawn' : 'given again'}${c.playerId ? ` for ${c.playerId}` : ''}`);
@@ -387,7 +387,7 @@ function consentsTab(am, me) {
     consentsTab(am, me);
   }));
   $('#fedOn', am)?.addEventListener('click', () => {
-    db.consents.push({ id: uid('k'), userId: me.id, playerId: null, type: 'federation', version: DOC_VERSION, lang: lang(), at: Date.now(), status: 'given' });
+    db.consents.push({ id: uid('k'), userId: me.id, playerId: null, type: 'federation', version: docVersion(), lang: lang(), at: Date.now(), status: 'given' });
     save(); log('consent', `${me.first} ${me.last}`, 'Federation sharing consent given'); toast(t('saved')); consentsTab(am, me);
   });
 }

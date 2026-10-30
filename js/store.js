@@ -7,6 +7,8 @@ import { ORIGIN } from './site-data.js';
 const KEY = 'hbb.db.v1';
 const SKEY = 'hbb.session.v1';
 export const DOC_VERSION = '2026-10';
+// version of the legal texts; the administrator starts a new one when the texts change
+export const docVersion = () => db.content?.legalVersion || DOC_VERSION;
 export const SEASON = '2026/27';
 export const ADMIN_EMAIL = 'admin@hb-talents.com';
 export const ADMIN_PASSWORD = 'HB-Admin-2026!';

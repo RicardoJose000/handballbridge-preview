@@ -1,13 +1,13 @@
 // Administration portal (specification section 8). Admin screens are in English.
-import { db, day, save, uid, session, currentAdmin, userById, userByEmail, verifyPassword, issueCode, checkCode, lockedFor, loginFailed, loginOk, log, LOG_TYPES, LOG_RETENTION_DAYS, playersOf, playerById, playerConsent, consentsOf, playerStatus, groupOf, birthYear, deletePlayer, deleteAccount, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_IDLE, SEASON, DOC_VERSION } from '../store.js';
-import { t, LANGS, KEYS, baseText, SITE_KEYS, site, setOverrides, country, DERIVED, fmtD, fmtDT, slogan, sloganBase } from '../i18n.js';
+import { db, day, save, uid, session, currentAdmin, userById, userByEmail, verifyPassword, issueCode, checkCode, lockedFor, loginFailed, loginOk, log, LOG_TYPES, LOG_RETENTION_DAYS, playersOf, playerById, playerConsent, consentsOf, playerStatus, groupOf, birthYear, deletePlayer, deleteAccount, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_IDLE, SEASON, DOC_VERSION, docVersion } from '../store.js';
+import { t, LANGS, KEYS, baseText, SITE_KEYS, site, setOverrides, country, DERIVED, fmtD, fmtDT, slogan, sloganBase, legalText, consentText } from '../i18n.js';
 import { COUNTRIES, ORIGIN, GROUPS } from '../site-data.js';
 import { isB } from '../plan.js';
 import { $, $$, esc, go, icon, toast, openModal, confirmBox, clearErrors, fieldError, formError, validEmail, bindPasswordUI, pwField, bindCodeInputs, codeInputsHTML, setBusy, download, note, flag, enter, bTag, countUp } from '../ui.js';
 import { sendMail, wrapMail, openInbox, latestFor, FROM } from '../mail.js';
 import { barsV, line, donut, tileMap } from '../charts.js';
 import { adHTML, heroImage } from './home.js';
-import { layoutSlogan, sloganCfg, SLOGAN_DEFAULT } from '../slogan.js';
+import { layoutSlogan, sloganCfg, SLOGAN_DEFAULT, SLOGAN_FONTS, SLOGAN_COLORS, sloganStyle, styleSlogan, loadFont } from '../slogan.js';
 
 const DAY = 86400000;
 const FLAG = { BA: 'ba', HR: 'hr', RS: 'rs', ME: 'me', AL: 'al', XK: 'xk', MK: 'mk' };
@@ -95,7 +95,7 @@ function login(main) {
 const TABS = () => [
   ['dashboard', 'Dashboard', icon.chart], ['players', 'Player database', icon.search], ['accounts', 'Parent and player accounts', icon.users],
   ['requests', 'Requests and messages', icon.inbox], ['content', 'Website content', icon.text], ['translations', 'Languages', icon.globe],
-  ['ads', 'Advertising', icon.image], ['reports', 'Statistics and reports', icon.list], ['logs', 'Activity log', icon.clock],
+  ['legal', 'Privacy and legal texts', icon.file], ['ads', 'Advertising', icon.image], ['reports', 'Statistics and reports', icon.list], ['logs', 'Activity log', icon.clock],
   ...(isB() ? [['events', 'Camps and events', icon.calendar, 1], ['announce', 'Announcements', icon.megaphone, 1], ['visitors', 'Visitors', icon.eye, 1]] : [])
 ];
 
@@ -118,7 +118,7 @@ function portal(main, me, tab) {
     idle.textContent = `Auto sign-out in ${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, '0')}`;
   }, 1000);
   const adm = $('#adm', main);
-  ({ dashboard, players, accounts, requests, content, translations, ads, reports, logs, events, announce, visitors })[tab](adm);
+  ({ dashboard, players, accounts, requests, content, legal, translations, ads, reports, logs, events, announce, visitors })[tab](adm);
   enter(adm, ':scope > *', { stagger: .04 });
   return () => clearInterval(timer);
 }
@@ -199,17 +199,16 @@ function dashboard(adm) {
 }
 
 /* ---------------- 8.3 + 8.4 player database ---------------- */
-const F0 = () => ({ q: '', year: '', group: '', cit: [], birthCountry: '', residence: '', gender: '', club: '', from: '', to: '', status: '' });
+const F0 = () => ({ q: '', year: '', group: '', cit: [], birthCountry: '', residence: '', gender: '', hand: '', pos: [], status: '' });
 let filt = F0(), sortBy = ['createdAt', -1], page = 0;
 export function applyFilters(f = filt) {
-  const [a, b] = [f.from ? new Date(f.from).getTime() : 0, f.to ? new Date(f.to).getTime() + DAY : Infinity];
   return db.players.filter(p =>
     (!f.q || p.name.toLowerCase().includes(f.q.toLowerCase()) || p.id.toLowerCase() === f.q.toLowerCase()) &&
     (!f.year || birthYear(p) === +f.year) && (!f.group || groupOf(p) === f.group) &&
     (!f.cit.length || f.cit.some(c => p.citizens.includes(c))) &&
     (!f.birthCountry || p.birthCountry === f.birthCountry) && (!f.residence || p.residence === f.residence) &&
-    (!f.gender || p.gender === f.gender) && (!f.club || p.club.toLowerCase().includes(f.club.toLowerCase())) &&
-    p.createdAt >= a && p.createdAt < b && (!f.status || playerStatus(p) === f.status));
+    (!f.gender || p.gender === f.gender) && (!f.hand || p.hand === f.hand) &&
+    (!f.pos.length || f.pos.some(i => p.positions.includes(i))) && (!f.status || playerStatus(p) === f.status));
 }
 const countrySel = (id, v, label) => `<label class="ff"><span>${label}</span><select class="input sm" id="${id}"><option value="">All</option>${[...new Set([...ORIGIN, 'NO', 'DE', 'AT', 'CH', 'SE', 'DK', 'SI', 'NL', 'US'])].map(c => [c, cn(c)]).concat(COUNTRIES.filter(c => !ORIGIN.includes(c)).map(c => [c, cn(c)]).sort((x, y) => x[1].localeCompare(y[1]))).filter((x, i, arr) => arr.findIndex(y => y[0] === x[0]) === i).map(([c, n]) => `<option value="${c}" ${c === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>`;
 function players(adm) {
@@ -221,10 +220,9 @@ function players(adm) {
       <label class="ff"><span>Birth-year group</span><select class="input sm" id="group"><option value="">All</option>${GROUPS.map(g => `<option ${g === filt.group ? 'selected' : ''}>${g}</option>`).join('')}</select></label>
       <label class="ff"><span>Gender</span><select class="input sm" id="gender"><option value="">All</option><option value="F" ${filt.gender === 'F' ? 'selected' : ''}>Female</option><option value="M" ${filt.gender === 'M' ? 'selected' : ''}>Male</option></select></label>
       ${countrySel('birthCountry', filt.birthCountry, 'Country of birth')}${countrySel('residence', filt.residence, 'Country of residence')}
-      <label class="ff"><span>Club</span><input class="input sm" id="club" value="${esc(filt.club)}" placeholder="Any club"></label>
-      <label class="ff"><span>Registered from</span><input class="input sm" type="date" id="from" value="${filt.from}"></label>
-      <label class="ff"><span>Registered to</span><input class="input sm" type="date" id="to" value="${filt.to}"></label>
+      <label class="ff"><span>Playing hand</span><select class="input sm" id="hand"><option value="">All</option><option value="L" ${filt.hand === 'L' ? 'selected' : ''}>Left</option><option value="R" ${filt.hand === 'R' ? 'selected' : ''}>Right</option></select></label>
       <label class="ff"><span>Profile status</span><select class="input sm" id="status"><option value="">All</option>${Object.entries(ST).map(([k, [, l]]) => `<option value="${k}" ${filt.status === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <div class="ff full"><span>Position (one or more)</span><div class="citf">${POS.map((n, i) => `<button type="button" class="pf ${filt.pos.includes(i) ? 'on' : ''}" data-pos="${i}">${n}</button>`).join('')}</div></div>
       <div class="ff full"><span>Citizenship (one or more)</span><div class="citf">${ORIGIN.map(c => `<button type="button" class="cf ${filt.cit.includes(c) ? 'on' : ''}" data-c="${c}">${flag(FLAG[c], 'sm')}${esc(cn(c))}</button>`).join('')}
         <select class="input sm" id="citMore"><option value="">+ other country</option>${COUNTRIES.filter(c => !ORIGIN.includes(c)).map(c => [c, cn(c)]).sort((x, y) => x[1].localeCompare(y[1])).map(([c, n]) => `<option value="${c}">${esc(n)}</option>`).join('')}</select>
         ${filt.cit.filter(c => !ORIGIN.includes(c)).map(c => `<button type="button" class="cf on" data-c="${c}">${esc(cn(c))} ×</button>`).join('')}</div></div>
@@ -235,7 +233,7 @@ function players(adm) {
       <div class="pager" id="pager"></div></div>`;
   const fl = $('#fl', adm);
   const sync = () => {
-    ['q', 'year', 'group', 'gender', 'birthCountry', 'residence', 'club', 'from', 'to', 'status'].forEach(k => { filt[k] = $('#' + k, fl).value.trim(); });
+    ['q', 'year', 'group', 'gender', 'birthCountry', 'residence', 'hand', 'status'].forEach(k => { filt[k] = $('#' + k, fl).value.trim(); });
     page = 0; table();
   };
   fl.addEventListener('input', e => { if (e.target.id !== 'citMore') sync(); });
@@ -244,6 +242,8 @@ function players(adm) {
     sync();
   });
   fl.addEventListener('click', e => {
+    const pf = e.target.closest('.pf');
+    if (pf) { const i = +pf.dataset.pos; filt.pos = filt.pos.includes(i) ? filt.pos.filter(x => x !== i) : [...filt.pos, i]; players(adm); return; }
     const c = e.target.closest('.cf'); if (!c) return;
     filt.cit = filt.cit.includes(c.dataset.c) ? filt.cit.filter(x => x !== c.dataset.c) : [...filt.cit, c.dataset.c];
     players(adm);
@@ -272,7 +272,7 @@ function sorted(rows) {
 }
 function describeFilters() {
   const parts = [];
-  Object.entries(filt).forEach(([k, v]) => { if (Array.isArray(v) ? v.length : v) parts.push(`${k}: ${Array.isArray(v) ? v.join('/') : v}`); });
+  Object.entries(filt).forEach(([k, v]) => { if (Array.isArray(v) ? v.length : v) parts.push(`${k}: ${Array.isArray(v) ? v.map(x => k === 'pos' ? POS[x] : x).join('/') : v}`); });
   return parts.join(', ') || 'none';
 }
 function exportPlayers(kind) {
@@ -777,6 +777,8 @@ async function monthlyReport() {
 const STAGES = { desktop: [1440, 900, 'Desktop'], tablet: [834, 1112, 'Tablet'], mobile: [390, 844, 'Phone'] };
 function sloganEditor(box, l) {
   const cfg = sloganCfg();
+  const st = sloganStyle();
+  SLOGAN_FONTS.forEach(f => loadFont(f.id));   // so every option shows in its own font
   let mode = 'desktop';
   const lines = slogan(l);
   box.innerHTML = `<div class="row-between"><div><h3>Slogan on the main image</h3><p class="muted small">It stays on the same spot of the picture on every screen size. Drag it in the preview or use the sliders. The text is saved for the language selected above.</p></div>
@@ -788,9 +790,11 @@ function sloganEditor(box, l) {
       </div></div>
       <form class="form" id="slogForm">
         ${[0, 1, 2].map(i => `<div class="field"><label for="sl${i}">Line ${i + 1}</label><input class="input sm" id="sl${i}" value="${esc(lines[i])}" placeholder="${esc(sloganBase(l)[i])}"></div>`).join('')}
+        <div class="field"><label>Font</label><div class="fontpick" id="fontPick">${SLOGAN_FONTS.map(f => `<button type="button" class="fp ${f.id === st.font ? 'on' : ''}" data-f="${f.id}" style="font-family:${esc(f.css)};font-style:${f.italic ? 'italic' : 'normal'}"><b>${esc(lines[0] || 'Isti sport.')}</b><small>${esc(f.name)}${f.cy ? '' : ' · no Cyrillic'}</small></button>`).join('')}</div></div>
+        <div class="field"><label>Colour</label><div class="colpick">${SLOGAN_COLORS.map(([c, n]) => `<button type="button" class="cp ${c === st.color ? 'on' : ''}" data-c="${c}" title="${n}" style="--c:${c}"><i></i>${n}</button>`).join('')}</div></div>
         <div class="sliders">${[['x', 'Left / right'], ['y', 'Up / down'], ['w', 'Size'], ['rot', 'Rotation']].map(([k, n]) => `<label class="sl"><span>${n} <b id="v_${k}"></b></span><input type="range" id="r_${k}"></label>`).join('')}</div>
         <p class="muted small" id="spNote"></p>
-        <div class="row-between"><button class="btn btn-ghost btn-sm" type="button" id="slogReset">Restore original position</button><button class="btn btn-gold btn-sm" type="submit">Save slogan</button></div>
+        <div class="row-between"><button class="btn btn-ghost btn-sm" type="button" id="slogReset">Restore original</button><button class="btn btn-gold btn-sm" type="submit">Save slogan</button></div>
       </form></div>`;
   const wrap = $('#spWrap', box), stage = $('#spStage', box), el = $('#spSlogan', box);
   const RANGE = {
@@ -822,7 +826,10 @@ function sloganEditor(box, l) {
     $('#v_rot', box).textContent = c.rot + '°';
     $('#spNote', box).innerHTML = mode === 'mobile' ? `Phone layout belongs to Option B ${bTag()}. In Option A phones show the desktop page.` : mode === 'tablet' ? 'Used for screens from 651 to 1100 pixels wide.' : 'Used for screens wider than 1100 pixels.';
   };
+  styleSlogan(el, st);
   draw();
+  $$('[data-f]', box).forEach(b => b.addEventListener('click', () => { st.font = b.dataset.f; $$('[data-f]', box).forEach(x => x.classList.toggle('on', x === b)); styleSlogan(el, st); setTimeout(draw, 300); document.fonts?.ready.then(draw); }));
+  $$('.cp', box).forEach(b => b.addEventListener('click', () => { st.color = b.dataset.c; $$('.cp', box).forEach(x => x.classList.toggle('on', x === b)); styleSlogan(el, st); }));
   const ro = new ResizeObserver(draw);
   ro.observe(wrap);
   $$('[data-m]', box).forEach(b => b.addEventListener('click', () => { mode = b.dataset.m; $$('[data-m]', box).forEach(x => x.classList.toggle('on', x === b)); draw(); }));
@@ -844,7 +851,13 @@ function sloganEditor(box, l) {
     draw();
   });
   el.addEventListener('pointerup', () => { drag = null; });
-  $('#slogReset', box).addEventListener('click', () => { cfg[mode] = { ...SLOGAN_DEFAULT[mode] }; draw(); });
+  $('#slogReset', box).addEventListener('click', () => {
+    cfg[mode] = { ...SLOGAN_DEFAULT[mode] };
+    st.font = 'original'; st.color = '#FFFFFF';
+    $$('[data-f]', box).forEach(x => x.classList.toggle('on', x.dataset.f === 'original'));
+    $$('.cp', box).forEach(x => x.classList.toggle('on', x.dataset.c === '#FFFFFF'));
+    styleSlogan(el, st); draw();
+  });
   $('#slogForm', box).addEventListener('submit', e => {
     e.preventDefault();
     const base = sloganBase(l);
@@ -855,8 +868,54 @@ function sloganEditor(box, l) {
     });
     const round = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Math.round(v * 1000) / 1000]));
     db.content.sloganPos = { desktop: round(cfg.desktop), tablet: round(cfg.tablet), mobile: round(cfg.mobile) };
+    db.content.sloganStyle = { font: st.font, color: st.color };
     save(); setOverrides(db.overrides);
     log('admin', actor, `Slogan saved (text ${l}, position for desktop, tablet and phone)`);
     toast('Slogan saved. It is live on the homepage.');
   });
+}
+
+/* ---------------- privacy information, terms and consent wording ---------------- */
+const LEGAL = {
+  privacy: ['Privacy information', 'Shown in registration step 3 and at hb-talents.com → Privacy information.'],
+  terms: ['Terms and Conditions', 'Shown in registration step 3 and at hb-talents.com → Terms and Conditions.'],
+  consent: ['Parent consent statement', 'Shown before a child is registered, printed in the consent PDF and sent by email. {RODITELJ} = parent name, {DIJETE} = child name.'],
+  consentAdult: ['Adult player consent statement', 'Shown to players aged 18 or older and printed in their PDF. {DIJETE} = player name.']
+};
+function legal(adm) {
+  let l = 'bs', kind = 'privacy';
+  const draw = () => {
+    const current = legalText(kind, l);
+    const base = kind.startsWith('consent') ? consentText({ parent: '{RODITELJ}', player: '{DIJETE}', adult: kind === 'consentAdult' }, l) : '';
+    adm.innerHTML = head('Privacy and legal texts', 'Edit the privacy statement, terms and consent wording for every language. Every acceptance is saved with the document version.') +
+      `<div class="card"><div class="row-between"><div class="segs">${Object.entries(LEGAL).map(([k, [n]]) => `<button class="seg ${k === kind ? 'on' : ''}" data-k="${k}">${n}</button>`).join('')}</div>
+        <label class="ff inline"><span>Language</span><select class="input sm" id="ll">${LANGS.map(x => `<option value="${x.code}" ${x.code === l ? 'selected' : ''}>${x.name}${legalText(kind, x.code) ? ' ✓' : ''}</option>`).join('')}</select></label></div>
+        <p class="muted small" style="margin:12px 0">${esc(LEGAL[kind][1])}</p>
+        <form id="lf" class="form"><textarea class="input" id="lt" rows="16" placeholder="${esc(kind.startsWith('consent') ? '' : 'Paste the approved text here. Empty lines start a new paragraph.')}">${esc(current ?? base)}</textarea>
+        <div class="docver">${icon.file}<span>Current version: <b>${docVersion()}</b> · ${current ? 'Edited text' : kind.startsWith('consent') ? 'Original text from the current site' : 'Not written yet (a placeholder is shown)'}</span></div>
+        <label class="check"><input type="checkbox" id="lnew"><span>This is a new version of the legal texts. New acceptances are saved with version <b>${new Date().toISOString().slice(0, 10)}</b>.</span></label>
+        <div class="row-between"><button class="btn btn-ghost btn-sm" type="button" id="lpre">${icon.eye} Preview</button><span>${current ? '<button class="btn btn-ghost btn-sm" type="button" id="lrest">Restore original</button> ' : ''}<button class="btn btn-gold btn-sm" type="submit">Save text</button></span></div></form></div>
+      <div class="card"><h3>Status per language</h3><table class="tbl"><thead><tr><th>Language</th>${Object.values(LEGAL).map(([n]) => `<th>${n}</th>`).join('')}</tr></thead><tbody>${LANGS.map(x => `<tr><td>${x.name}</td>${Object.keys(LEGAL).map(k => `<td>${legalText(k, x.code) ? '<span class="chip ok">Written</span>' : k.startsWith('consent') ? '<span class="chip">Original</span>' : '<span class="chip warn">Missing</span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    $$('[data-k]', adm).forEach(b => b.addEventListener('click', () => { kind = b.dataset.k; draw(); }));
+    $('#ll', adm).addEventListener('change', e => { l = e.target.value; draw(); });
+    $('#lpre', adm).addEventListener('click', () => {
+      const txt = $('#lt', adm).value.trim();
+      openModal({ title: LEGAL[kind][0], wide: true, sub: `${LANGS.find(x => x.code === l).name} · preview`, html: `<div class="legal">${txt.split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>` });
+    });
+    $('#lrest', adm)?.addEventListener('click', () => { delete db.overrides[l]['legal.' + kind]; save(); setOverrides(db.overrides); log('admin', actor, `${LEGAL[kind][0]} (${l}) restored`); toast('Original restored.'); draw(); });
+    $('#lf', adm).addEventListener('submit', e => {
+      e.preventDefault();
+      const txt = $('#lt', adm).value.trim();
+      if (!txt) { toast('The text cannot be empty.', 'bad'); return; }
+      if (kind === 'consent' && !txt.includes('{DIJETE}')) { toast('Keep {DIJETE} in the text, it becomes the child name.', 'bad'); return; }
+      db.overrides[l] = db.overrides[l] || {};
+      db.overrides[l]['legal.' + kind] = txt;
+      if ($('#lnew', adm).checked) db.content.legalVersion = new Date().toISOString().slice(0, 10);
+      save(); setOverrides(db.overrides);
+      log('admin', actor, `${LEGAL[kind][0]} saved (${l}), version ${docVersion()}`);
+      toast('Saved. The new text is live.');
+      draw();
+    });
+  };
+  draw();
 }

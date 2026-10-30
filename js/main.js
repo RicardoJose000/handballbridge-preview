@@ -3,13 +3,13 @@ import { LANGS, lang, langInfo, setLang, onLang, site, t, setOverrides } from '.
 import { applyPlan, setPlan, getPlan, onPlan, isB } from './plan.js';
 import { $, $$, esc, hasGsap, reduced, toast, flag } from './ui.js';
 import { initInbox, closeInbox, renderList } from './mail.js';
-import { renderHome, renderAbout, renderParents, renderContact } from './views/home.js';
+import { renderHome, renderAbout, renderParents, renderContact, renderLegal } from './views/home.js';
 import { renderRegister, renderVerify, renderDeclarations, renderLogin, renderForgot } from './views/auth.js';
 import { renderAccount } from './views/account.js';
 import { renderAdmin } from './views/admin.js';
 
 const routes = {
-  '': renderHome, about: renderAbout, parents: renderParents, contact: renderContact,
+  '': renderHome, about: renderAbout, parents: renderParents, contact: renderContact, legal: renderLegal,
   register: renderRegister, verify: renderVerify, declarations: renderDeclarations, login: renderLogin, forgot: renderForgot,
   account: renderAccount, admin: renderAdmin
 };
