@@ -247,6 +247,18 @@ export function enter(root, sel, opts = {}) {
   if (!hasGsap() || reduced() || !els.length) return;
   gsap.from(els, { opacity: 0, y: 22, duration: .8, ease: 'expo.out', stagger: .05, clearProps: 'transform,opacity', ...opts });
 }
+// self-hosted media (Pexels licence): muted clips play only while on screen
+export const vid = (name, { preload = 'none', cls = '' } = {}) =>
+  `<video class="${cls}" data-auto src="assets/video/${name}.mp4" poster="assets/video/${name}.jpg" muted loop playsinline preload="${preload}" aria-hidden="true"></video>`;
+export const photo = (name, alt = '', attrs = '') => `<img src="assets/photo/${name}.webp" alt="${esc(alt)}" loading="lazy" decoding="async" ${attrs}>`;
+export function autoVideos(root) {
+  const vids = $$('video[data-auto]', root);
+  if (reduced() || !('IntersectionObserver' in window)) { vids.forEach(v => v.pause()); return () => {}; }
+  const io = new IntersectionObserver(es => es.forEach(({ target: v, isIntersecting }) => { if (isIntersecting) v.play()?.catch(() => {}); else v.pause(); }), { rootMargin: '120px' });
+  vids.forEach(v => { v.muted = true; io.observe(v); });
+  return () => { io.disconnect(); vids.forEach(v => v.pause()); };
+}
+
 export function countUp(el, to, dur = 1.2) {
   if (!hasGsap() || reduced()) { el.textContent = to; return; }
   const o = { v: 0 };

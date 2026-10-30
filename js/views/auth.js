@@ -5,6 +5,8 @@ import { isB } from '../plan.js';
 import { $, $$, esc, go, icon, field, selectField, pwField, bindPasswordUI, bindCodeInputs, codeInputsHTML, clearErrors, fieldError, formError, firstError, validEmail, pwStrongEnough, setBusy, toast, openModal, steps, note, enter, bTag } from '../ui.js';
 import { sendMail, wrapMail, codeMail, openInbox, latestFor } from '../mail.js';
 import { heroImage } from './home.js';
+import { vid, autoVideos } from '../ui.js';
+const ART = { register: 'parent', verify: 'sign', declarations: 'sign', login: 'team', forgot: 'parent' };
 
 const stepLabels = () => [t('stepAccount'), t('stepEmail'), t('stepDecl'), t('stepReady')];
 export const countryOptions = () => {
@@ -19,8 +21,9 @@ export function deviceName() {
 }
 
 function shell(main, inner, { kicker = '', step = -1 } = {}) {
+  const route = location.hash.replace(/^#\/?/, '').split('/')[0];
   main.innerHTML = `<section class="auth">
-    <div class="auth-art" style="--img:url('${heroImage()}')"><div class="auth-art-in">
+    <div class="auth-art" style="--img:url('${heroImage()}')"><div class="art-media">${vid(ART[route] || 'team', { preload: 'auto' })}</div><div class="auth-art-in">
       <span class="brand"><span class="word">Handball<b>Bridge</b></span></span>
       <p class="auth-quote">${esc(site('heroA'))} <b>${esc(site('heroB'))}</b></p>
       <ul class="trust"><li>${icon.lock}<span>${esc(t('footerRights'))}</span></li><li>${icon.mail}<span>noreply@hb-talents.com</span></li></ul>
@@ -31,6 +34,7 @@ function shell(main, inner, { kicker = '', step = -1 } = {}) {
       ${inner}
     </div></div></section>`;
   enter(main, '#ac > *', { stagger: .04 });
+  autoVideos(main);
   return $('#ac', main);
 }
 

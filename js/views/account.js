@@ -47,7 +47,8 @@ export function renderAccount(main, rest) {
   enter(am, ':scope > *');
 }
 
-const band = me => `<section class="band" style="--img:url('${heroImage()}')"><div class="shell">
+const BAND = () => new URL('assets/photo/match.webp', location.href.split('#')[0]).href;
+const band = me => `<section class="band" style="--img:url('${BAND()}')"><div class="shell">
   <div class="eyebrow">${esc(t('myAccount'))} · ${esc(me.role === 'adult' ? t('regAdult') : t('regParent'))}</div>
   <h1>${esc(t('hello', { name: me.first }))}</h1><p>${esc(me.role === 'adult' ? t('portalSubAdult') : t('portalSub'))}</p></div></section>`;
 

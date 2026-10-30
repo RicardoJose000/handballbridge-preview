@@ -15,7 +15,20 @@ const routes = {
 };
 
 const main = $('#main');
-let cleanup = null, busy = false, queued = false, lastView = null;
+let cleanup = null, busy = false, queued = false, lastView = null, first = true;
+
+// gold and navy curtain between pages
+async function wipe(dir) {
+  if (!hasGsap() || reduced()) return;
+  const [a, b] = $$('.wipe span');
+  if (dir === 'in') {
+    gsap.set([a, b], { transformOrigin: 'bottom' });
+    await gsap.timeline().to(a, { scaleY: 1, duration: .38, ease: 'power3.in' }).to(b, { scaleY: 1, duration: .38, ease: 'power3.in' }, .08);
+  } else {
+    gsap.set([a, b], { transformOrigin: 'top' });
+    await gsap.timeline().to(b, { scaleY: 0, duration: .55, ease: 'expo.out' }).to(a, { scaleY: 0, duration: .55, ease: 'expo.out' }, .06);
+  }
+}
 
 if (hasGsap()) gsap.registerPlugin(ScrollTrigger);
 
@@ -29,6 +42,8 @@ async function navigate({ soft = false } = {}) {
   closeInbox();
   $$('.modal').forEach(m => m.remove());
   document.documentElement.style.overflow = '';
+  const curtain = !soft && !first;
+  if (curtain) await wipe('in');
   try { cleanup?.(); } catch { /* ignore */ }
   cleanup = null;
   if (hasGsap()) ScrollTrigger.getAll().forEach(tr => tr.kill());
@@ -43,6 +58,8 @@ async function navigate({ soft = false } = {}) {
   if (soft) window.scrollTo(0, y);
   if (hasGsap()) ScrollTrigger.refresh();
   if (!soft) main.focus({ preventScroll: true });
+  if (curtain) await wipe('out');
+  first = false;
   busy = false;
   if (queued) { queued = false; navigate(); }
 }

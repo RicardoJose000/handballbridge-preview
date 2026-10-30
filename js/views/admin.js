@@ -7,6 +7,7 @@ import { $, $$, esc, go, icon, toast, openModal, confirmBox, clearErrors, fieldE
 import { sendMail, wrapMail, openInbox, latestFor, FROM } from '../mail.js';
 import { barsV, line, donut, tileMap } from '../charts.js';
 import { adHTML, heroImage } from './home.js';
+import { vid, autoVideos } from '../ui.js';
 
 const DAY = 86400000;
 const FLAG = { BA: 'ba', HR: 'hr', RS: 'rs', ME: 'me', AL: 'al', XK: 'xk', MK: 'mk' };
@@ -31,11 +32,12 @@ export function renderAdmin(main, [tab]) {
 
 /* ---------------- 8.1 secure login ---------------- */
 function login(main) {
-  main.innerHTML = `<section class="auth admin-auth"><div class="auth-art" style="--img:url('${heroImage()}')"><div class="auth-art-in">
+  main.innerHTML = `<section class="auth admin-auth"><div class="auth-art" style="--img:url('${heroImage()}')"><div class="art-media">${vid('coach', { preload: 'auto' })}</div><div class="auth-art-in">
       <span class="brand"><span class="word">Handball<b>Bridge</b></span></span><p class="auth-quote">Administration portal</p>
       <ul class="trust"><li>${icon.lock}<span>Separate admin login with a second step</span></li><li>${icon.shield}<span>Lockout after 5 wrong attempts</span></li><li>${icon.clock}<span>Automatic sign-out after 15 minutes</span></li><li>${icon.list}<span>Every important action is logged</span></li></ul>
     </div></div><div class="auth-main"><div class="auth-card" id="ac"></div></div></section>`;
   const box = $('#ac', main);
+  autoVideos(main);
   let admin = null;
   function one() {
     box.innerHTML = `<div class="step-kicker">PRIVATE ADMINISTRATION · STEP 1 OF 2</div><h1>Administrator sign in</h1><p class="muted">Password first, then a code sent to the admin mailbox.</p>
@@ -133,7 +135,7 @@ function rangeOf(r) {
 }
 function dashboard(adm) {
   const st = { kind: '30', from: '', to: '' };
-  adm.innerHTML = head('Dashboard', 'Live numbers from the database. No names or contact details on this page.',
+  adm.innerHTML = `<div class="adm-banner">${vid('coach', { preload: 'auto' })}<div><span class="eyebrow">HandballBridge · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span><b>Good to see you, Administrator.</b></div></div>` + head('Dashboard', 'Live numbers from the database. No names or contact details on this page.',
     `${isB() ? `<button class="btn btn-gold btn-sm" id="mrep">${icon.download} Monthly report PDF ${bTag()}</button>` : ''}`) +
     `<div class="range card"><span>Period</span>${[['today', 'Today'], ['7', '7 days'], ['30', '30 days'], ['custom', 'Custom']].map(([k, l]) => `<button class="seg ${k === st.kind ? 'on' : ''}" data-k="${k}">${l}</button>`).join('')}
       <span class="custom" hidden><input class="input sm" type="date" id="rf"> – <input class="input sm" type="date" id="rt"></span></div>
@@ -194,6 +196,7 @@ function dashboard(adm) {
   });
   ['rf', 'rt'].forEach(id => $('#' + id, adm).addEventListener('change', () => { st.from = $('#rf', adm).value; st.to = $('#rt', adm).value; draw(); }));
   $('#mrep', adm)?.addEventListener('click', monthlyReport);
+  autoVideos(adm);
   draw();
 }
 
