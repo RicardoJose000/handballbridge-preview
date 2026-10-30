@@ -730,7 +730,7 @@ body .swish { position: static; width: 100%; height: clamp(16px, 3.3vw, 52px); m
   body.plan-b .hero-desc { font-size: clamp(15px, 2.6vw, 18px); }
 }
 @media (max-width: 650px) {
-  body.plan-b .slogan { position: relative; left: 5%; top: 0; width: 82%; aspect-ratio: auto; min-height: 240px; margin: 92px 0 -80px; }
+  body.plan-b .slogan { position: relative; left: 5%; top: 0; width: 82%; aspect-ratio: auto; min-height: 240px; margin: 92px 0 -52px; }
   body.plan-b .slogan-in { font-size: clamp(25px, 6.2vw, 42px); transform: rotate(-10deg); }
   body.plan-b .swish { height: 34px; }
   body.plan-b .hero-body { margin-top: 0; }

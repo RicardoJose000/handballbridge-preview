@@ -41,7 +41,18 @@ export function layoutSlogan(box, el, cfg = sloganCfg(), mode) {
 
 // keeps the slogan in place while the window or the hero changes size
 export function watchSlogan(box, el) {
-  const run = () => layoutSlogan(box, el);
+  const body = box.querySelector('.hero-body');
+  const run = () => {
+    layoutSlogan(box, el);
+    if (!body) return;
+    // on narrow screens (tablet portrait) the slogan could cover the title: then the title moves below it
+    body.style.paddingTop = '';
+    if (el.dataset.mode === 'mobile') return;
+    const lines = [...el.querySelectorAll('.slogan-in span')].map(s => s.getBoundingClientRect());
+    const sb = { left: Math.min(...lines.map(r => r.left)), right: Math.max(...lines.map(r => r.right)), top: Math.min(...lines.map(r => r.top)), bottom: Math.max(...lines.map(r => r.bottom)) };
+    const hit = [...body.querySelectorAll('.eyebrow, h1 .l')].some(t => { const r = t.getBoundingClientRect(); return r.left < sb.right && r.right > sb.left && r.top < sb.bottom && r.bottom > sb.top; });
+    if (hit) body.style.paddingTop = Math.ceil(sb.bottom - body.getBoundingClientRect().top + 18) + 'px';
+  };
   const ro = new ResizeObserver(run);
   ro.observe(box);
   document.fonts?.ready.then(run);
