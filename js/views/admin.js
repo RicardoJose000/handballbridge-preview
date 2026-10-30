@@ -1,13 +1,13 @@
 // Administration portal (specification section 8). Admin screens are in English.
 import { db, day, save, uid, session, currentAdmin, userById, userByEmail, verifyPassword, issueCode, checkCode, lockedFor, loginFailed, loginOk, log, LOG_TYPES, LOG_RETENTION_DAYS, playersOf, playerById, playerConsent, consentsOf, playerStatus, groupOf, birthYear, deletePlayer, deleteAccount, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_IDLE, SEASON, DOC_VERSION } from '../store.js';
-import { t, LANGS, KEYS, baseText, SITE_KEYS, site, setOverrides, country, DERIVED, fmtD, fmtDT } from '../i18n.js';
+import { t, LANGS, KEYS, baseText, SITE_KEYS, site, setOverrides, country, DERIVED, fmtD, fmtDT, slogan, sloganBase } from '../i18n.js';
 import { COUNTRIES, ORIGIN, GROUPS } from '../site-data.js';
 import { isB } from '../plan.js';
 import { $, $$, esc, go, icon, toast, openModal, confirmBox, clearErrors, fieldError, formError, validEmail, bindPasswordUI, pwField, bindCodeInputs, codeInputsHTML, setBusy, download, note, flag, enter, bTag, countUp } from '../ui.js';
 import { sendMail, wrapMail, openInbox, latestFor, FROM } from '../mail.js';
 import { barsV, line, donut, tileMap } from '../charts.js';
 import { adHTML, heroImage } from './home.js';
-import { vid, autoVideos } from '../ui.js';
+import { layoutSlogan, sloganCfg, SLOGAN_DEFAULT } from '../slogan.js';
 
 const DAY = 86400000;
 const FLAG = { BA: 'ba', HR: 'hr', RS: 'rs', ME: 'me', AL: 'al', XK: 'xk', MK: 'mk' };
@@ -32,12 +32,11 @@ export function renderAdmin(main, [tab]) {
 
 /* ---------------- 8.1 secure login ---------------- */
 function login(main) {
-  main.innerHTML = `<section class="auth admin-auth"><div class="auth-art" style="--img:url('${heroImage()}')"><div class="art-media">${vid('coach', { preload: 'auto' })}</div><div class="auth-art-in">
+  main.innerHTML = `<section class="auth admin-auth"><div class="auth-art"><div class="auth-art-in">
       <span class="brand"><span class="word">Handball<b>Bridge</b></span></span><p class="auth-quote">Administration portal</p>
       <ul class="trust"><li>${icon.lock}<span>Separate admin login with a second step</span></li><li>${icon.shield}<span>Lockout after 5 wrong attempts</span></li><li>${icon.clock}<span>Automatic sign-out after 15 minutes</span></li><li>${icon.list}<span>Every important action is logged</span></li></ul>
     </div></div><div class="auth-main"><div class="auth-card" id="ac"></div></div></section>`;
   const box = $('#ac', main);
-  autoVideos(main);
   let admin = null;
   function one() {
     box.innerHTML = `<div class="step-kicker">PRIVATE ADMINISTRATION · STEP 1 OF 2</div><h1>Administrator sign in</h1><p class="muted">Password first, then a code sent to the admin mailbox.</p>
@@ -135,7 +134,7 @@ function rangeOf(r) {
 }
 function dashboard(adm) {
   const st = { kind: '30', from: '', to: '' };
-  adm.innerHTML = `<div class="adm-banner">${vid('coach', { preload: 'auto' })}<div><span class="eyebrow">HandballBridge · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span><b>Good to see you, Administrator.</b></div></div>` + head('Dashboard', 'Live numbers from the database. No names or contact details on this page.',
+  adm.innerHTML = head('Dashboard', 'Live numbers from the database. No names or contact details on this page.',
     `${isB() ? `<button class="btn btn-gold btn-sm" id="mrep">${icon.download} Monthly report PDF ${bTag()}</button>` : ''}`) +
     `<div class="range card"><span>Period</span>${[['today', 'Today'], ['7', '7 days'], ['30', '30 days'], ['custom', 'Custom']].map(([k, l]) => `<button class="seg ${k === st.kind ? 'on' : ''}" data-k="${k}">${l}</button>`).join('')}
       <span class="custom" hidden><input class="input sm" type="date" id="rf"> – <input class="input sm" type="date" id="rt"></span></div>
@@ -196,7 +195,6 @@ function dashboard(adm) {
   });
   ['rf', 'rt'].forEach(id => $('#' + id, adm).addEventListener('change', () => { st.from = $('#rf', adm).value; st.to = $('#rt', adm).value; draw(); }));
   $('#mrep', adm)?.addEventListener('click', monthlyReport);
-  autoVideos(adm);
   draw();
 }
 
@@ -449,6 +447,7 @@ function content(adm) {
       `<div class="card"><div class="row-between"><h3>Homepage and menu texts</h3><label class="ff inline"><span>Language</span><select class="input sm" id="cl">${LANGS.map(x => `<option value="${x.code}" ${x.code === l ? 'selected' : ''}>${x.name}</option>`).join('')}</select></label></div>
         <form id="cform" class="form">${SITE_KEYS.map(k => { const v = site(k, l); const long = v.length > 60; return `<div class="field"><label for="s_${k}">${SITE_LABELS[k] || k}</label>${long ? `<textarea class="input" id="s_${k}" name="${k}" rows="2">${esc(v)}</textarea>` : `<input class="input" id="s_${k}" name="${k}" value="${esc(v)}">`}</div>`; }).join('')}
         <div class="row-between"><span class="muted small">Only the selected language changes. The original text can be restored at any time.</span><span><button class="btn btn-ghost btn-sm" type="button" id="crest">Restore original</button> <button class="btn btn-gold btn-sm" type="submit">Save texts</button></span></div></form></div>
+      <div class="card" id="slogEd"></div>
       <div class="grid-2"><div class="card"><h3>Main homepage image</h3><p class="muted small">The current image stays until the project owner approves a new one.</p>
         <div class="heroprev" style="background-image:url('${heroImage()}')"></div>
         <label class="check"><input type="checkbox" id="appr"><span>The new image is approved by the project owner</span></label>
@@ -456,6 +455,7 @@ function content(adm) {
       <div class="card"><div class="row-between"><h3>News and announcements</h3><button class="btn btn-gold btn-sm" id="padd">${icon.plus} New post</button></div>
         <div class="list">${posts.map(p => `<div class="lrow" data-p="${p.id}"><span class="lic ${p.active ? 'ok' : ''}">${icon.text}</span><div class="lmain"><b>${esc(p.title.en || p.title.bs)}</b><small>${fmtD(p.at, 'en')} · ${p.active ? 'Visible on homepage' : 'Hidden'}</small></div><button class="btn btn-ghost btn-sm" data-pe>Edit</button><button class="btn btn-ghost btn-sm" data-pt>${p.active ? 'Hide' : 'Show'}</button><button class="btn btn-ghost btn-sm danger" data-pd>Delete</button></div>`).join('') || '<p class="muted">No posts.</p>'}</div></div></div>`;
     $('#cl', adm).addEventListener('change', e => { l = e.target.value; draw(); });
+    sloganEditor($('#slogEd', adm), l);
     $('#cform', adm).addEventListener('submit', e => {
       e.preventDefault();
       const v = Object.fromEntries(new FormData(e.target));
@@ -771,4 +771,92 @@ async function monthlyReport() {
   download(`handballbridge-report-${new Date().toISOString().slice(0, 7)}.pdf`, url);
   sendMail(ADMIN_EMAIL, `Monthly report ${month}`, wrapMail('en', `Monthly report ${month}`, '<p>The monthly summary is attached. It contains aggregated numbers only.</p>'), { attachments: [{ name: `report-${new Date().toISOString().slice(0, 7)}.pdf`, url }] });
   log('admin', actor, `Monthly report generated and sent to ${ADMIN_EMAIL}`);
+}
+
+/* ---------------- slogan on the main image: text and position ---------------- */
+const STAGES = { desktop: [1440, 900, 'Desktop'], tablet: [834, 1112, 'Tablet'], mobile: [390, 844, 'Phone'] };
+function sloganEditor(box, l) {
+  const cfg = sloganCfg();
+  let mode = 'desktop';
+  const lines = slogan(l);
+  box.innerHTML = `<div class="row-between"><div><h3>Slogan on the main image</h3><p class="muted small">It stays on the same spot of the picture on every screen size. Drag it in the preview or use the sliders. The text is saved for the language selected above.</p></div>
+      <span class="segs">${Object.entries(STAGES).map(([k, [, , n]]) => `<button type="button" class="seg ${k === mode ? 'on' : ''}" data-m="${k}">${n}</button>`).join('')}</span></div>
+    <div class="slog-grid">
+      <div class="sp-wrap" id="spWrap"><div class="sp-stage" id="spStage"><div class="sp-img" style="background-image:url('${heroImage()}')"></div><div class="sp-shade"></div>
+        <div class="sp-title"><i></i><i></i><i></i></div>
+        <div class="slogan sp-slogan" id="spSlogan"><div class="slogan-in">${lines.map(x => `<span>${esc(x)}</span>`).join('')}<svg class="swish" viewBox="0 0 520 72" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="gSwishP" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#B97D19"/><stop offset="40%" stop-color="#FFF2A3"/><stop offset="70%" stop-color="#E9B63D"/><stop offset="100%" stop-color="#A36A12"/></linearGradient></defs><path d="M12 54 Q255 -10 508 43 Q255 5 12 54 Z" fill="url(#gSwishP)"/><path d="M44 61 Q259 16 478 44" fill="none" stroke="#FFE998" stroke-width="2.4" stroke-linecap="round"/></svg></div></div>
+      </div></div>
+      <form class="form" id="slogForm">
+        ${[0, 1, 2].map(i => `<div class="field"><label for="sl${i}">Line ${i + 1}</label><input class="input sm" id="sl${i}" value="${esc(lines[i])}" placeholder="${esc(sloganBase(l)[i])}"></div>`).join('')}
+        <div class="sliders">${[['x', 'Left / right'], ['y', 'Up / down'], ['w', 'Size'], ['rot', 'Rotation']].map(([k, n]) => `<label class="sl"><span>${n} <b id="v_${k}"></b></span><input type="range" id="r_${k}"></label>`).join('')}</div>
+        <p class="muted small" id="spNote"></p>
+        <div class="row-between"><button class="btn btn-ghost btn-sm" type="button" id="slogReset">Restore original position</button><button class="btn btn-gold btn-sm" type="submit">Save slogan</button></div>
+      </form></div>`;
+  const wrap = $('#spWrap', box), stage = $('#spStage', box), el = $('#spSlogan', box);
+  const RANGE = {
+    desktop: { x: [0, .9, .002], y: [-.1, .8, .002], w: [.12, .6, .002] },
+    tablet: { x: [0, .9, .002], y: [-.1, .8, .002], w: [.12, .6, .002] },
+    mobile: { x: [-.2, .4, .005], y: [-80, 200, 1], w: [.4, 1, .005] }
+  };
+  const scale = () => { const [W, H] = STAGES[mode]; return Math.min(wrap.clientWidth / W, 460 / H); };
+  const draw = () => {
+    const [W, H] = STAGES[mode], sc = scale();
+    Object.assign(stage.style, { width: W + 'px', height: H + 'px', transform: `scale(${sc})`, left: (wrap.clientWidth - W * sc) / 2 + 'px' });
+    wrap.style.height = H * sc + 'px';
+    stage.dataset.mode = mode;
+    const c = cfg[mode];
+    if (mode === 'mobile') {
+      const inner = el.firstElementChild;
+      Object.assign(el.style, { left: c.x * 100 + '%', top: 92 + c.y + 'px', width: c.w * 100 + '%' });
+      inner.style.fontSize = Math.min(42, Math.max(25, .062 * W)) + 'px';
+      inner.style.transform = `rotate(${c.rot}deg)`;
+    } else layoutSlogan(stage, el, cfg, mode);
+    ['x', 'y', 'w'].forEach(k => {
+      const r = $('#r_' + k, box);
+      [r.min, r.max, r.step] = RANGE[mode][k];
+      r.value = c[k];
+      $('#v_' + k, box).textContent = mode === 'mobile' && k === 'y' ? Math.round(c.y) + ' px' : Math.round(c[k] * 100) + '%';
+    });
+    const rr = $('#r_rot', box);
+    rr.min = -25; rr.max = 10; rr.step = 1; rr.value = c.rot;
+    $('#v_rot', box).textContent = c.rot + '°';
+    $('#spNote', box).innerHTML = mode === 'mobile' ? `Phone layout belongs to Option B ${bTag()}. In Option A phones show the desktop page.` : mode === 'tablet' ? 'Used for screens from 651 to 1100 pixels wide.' : 'Used for screens wider than 1100 pixels.';
+  };
+  draw();
+  const ro = new ResizeObserver(draw);
+  ro.observe(wrap);
+  $$('[data-m]', box).forEach(b => b.addEventListener('click', () => { mode = b.dataset.m; $$('[data-m]', box).forEach(x => x.classList.toggle('on', x === b)); draw(); }));
+  ['x', 'y', 'w', 'rot'].forEach(k => $('#r_' + k, box).addEventListener('input', e => { cfg[mode][k] = +e.target.value; draw(); }));
+  [0, 1, 2].forEach(i => $('#sl' + i, box).addEventListener('input', e => { $$('.slogan-in span', el)[i].textContent = e.target.value || sloganBase(l)[i]; }));
+  // drag the slogan in the preview
+  let drag = null;
+  el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY }; });
+  el.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const [W, H] = STAGES[mode], sc = scale();
+    const dx = (e.clientX - drag.x) / sc, dy = (e.clientY - drag.y) / sc;
+    drag = { x: e.clientX, y: e.clientY };
+    const c = cfg[mode];
+    if (mode === 'mobile') { c.x += dx / W; c.y += dy; } else {
+      const s2 = Math.max(W / 1200, H / 697);
+      c.x += dx / (1200 * s2); c.y += dy / (697 * s2);
+    }
+    draw();
+  });
+  el.addEventListener('pointerup', () => { drag = null; });
+  $('#slogReset', box).addEventListener('click', () => { cfg[mode] = { ...SLOGAN_DEFAULT[mode] }; draw(); });
+  $('#slogForm', box).addEventListener('submit', e => {
+    e.preventDefault();
+    const base = sloganBase(l);
+    db.overrides[l] = db.overrides[l] || {};
+    [0, 1, 2].forEach(i => {
+      const v = $('#sl' + i, box).value.trim();
+      if (v && v !== base[i]) db.overrides[l]['slogan.' + i] = v; else delete db.overrides[l]['slogan.' + i];
+    });
+    const round = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Math.round(v * 1000) / 1000]));
+    db.content.sloganPos = { desktop: round(cfg.desktop), tablet: round(cfg.tablet), mobile: round(cfg.mobile) };
+    save(); setOverrides(db.overrides);
+    log('admin', actor, `Slogan saved (text ${l}, position for desktop, tablet and phone)`);
+    toast('Slogan saved. It is live on the homepage.');
+  });
 }

@@ -44,6 +44,5 @@ Every email the platform sends (codes, confirmations with the consent PDF, invit
 ## Credits
 
 - Main image, flags, logo and homepage texts: from the current hb-talents.com concept (project owner).
-- Handball photos and video clips: Pexels contributors, free Pexels licence. The handball film was cut and graded from those photos. All media is self-hosted in `assets/`.
 - Noto Sans (SIL Open Font License, `assets/fonts/OFL.txt`) for the consent PDFs.
 - GSAP and jsPDF from cdnjs.
