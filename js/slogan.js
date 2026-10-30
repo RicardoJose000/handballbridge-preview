@@ -31,8 +31,11 @@ export function layoutSlogan(box, el, cfg = sloganCfg(), mode) {
   }
   const s = Math.max(W / IMG.w, H / IMG.h), dw = IMG.w * s, dh = IMG.h * s;
   const ox = (W - dw) / 2, oy = (H - dh) * IMG.posY;
-  Object.assign(el.style, { left: ox + c.x * dw + 'px', top: oy + c.y * dh + 'px', width: c.w * dw + 'px' });
-  inner.style.fontSize = (c.w * dw * .0807).toFixed(2) + 'px';   // 36px at 446px width, as on the current site
+  // stay on the same spot of the picture, but never get cut at the screen edge
+  const width = Math.min(c.w * dw, W * .42);
+  const left = Math.max(12, Math.min(ox + c.x * dw, W - width - 24));
+  Object.assign(el.style, { left: left + 'px', top: oy + c.y * dh + 'px', width: width + 'px' });
+  inner.style.fontSize = (width * .0807).toFixed(2) + 'px';   // 36px at 446px width, as on the current site
   inner.style.transform = `rotate(${c.rot}deg)`;
 }
 
