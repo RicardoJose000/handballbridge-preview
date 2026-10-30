@@ -18,8 +18,8 @@ export const sloganCfg = () => {
 export const modeFor = (W, b = isB()) => (b && W <= 650 ? 'mobile' : W <= 1100 ? 'tablet' : 'desktop');
 
 // box: element that shows the image with background-size: cover; el: the .slogan element
-export function layoutSlogan(box, el, cfg = sloganCfg(), mode) {
-  const W = box.clientWidth, H = box.clientHeight;
+export function layoutSlogan(box, el, cfg = sloganCfg(), mode, fixedH) {
+  const W = box.clientWidth, H = fixedH || box.clientHeight;
   mode = mode || modeFor(W);
   const c = cfg[mode], inner = el.firstElementChild;
   el.dataset.mode = mode;
@@ -42,20 +42,37 @@ export function layoutSlogan(box, el, cfg = sloganCfg(), mode) {
 // keeps the slogan in place while the window or the hero changes size
 export function watchSlogan(box, el) {
   const body = box.querySelector('.hero-body');
-  const run = () => {
+  // size of the text itself, not of its full-width box
+  const textRect = t => { const r = document.createRange(); r.selectNodeContents(t); return r.getBoundingClientRect(); };
+  const sloganBottom = () => Math.max(...[...el.querySelectorAll('.slogan-in span')].map(s => s.getBoundingClientRect().bottom));
+  const covers = () => {
+    const ls = [...el.querySelectorAll('.slogan-in span')].map(s => s.getBoundingClientRect());
+    const sb = { l: Math.min(...ls.map(r => r.left)), r: Math.max(...ls.map(r => r.right)), t: Math.min(...ls.map(r => r.top)), b: Math.max(...ls.map(r => r.bottom)) };
+    return [...body.querySelectorAll('.eyebrow, h1 .l')].some(x => { const r = textRect(x); return r.left < sb.r && r.right > sb.l && r.top < sb.b && r.bottom > sb.t; });
+  };
+  let size = '';
+  const fit = () => {
+    if (body) body.style.paddingTop = '';
     layoutSlogan(box, el);
-    if (!body) return;
-    // on narrow screens (tablet portrait) the slogan could cover the title: then the title moves below it
-    body.style.paddingTop = '';
-    if (el.dataset.mode === 'mobile') return;
-    const lines = [...el.querySelectorAll('.slogan-in span')].map(s => s.getBoundingClientRect());
-    const sb = { left: Math.min(...lines.map(r => r.left)), right: Math.max(...lines.map(r => r.right)), top: Math.min(...lines.map(r => r.top)), bottom: Math.max(...lines.map(r => r.bottom)) };
-    const hit = [...body.querySelectorAll('.eyebrow, h1 .l')].some(t => { const r = t.getBoundingClientRect(); return r.left < sb.right && r.right > sb.left && r.top < sb.bottom && r.bottom > sb.top; });
-    if (hit) body.style.paddingTop = Math.ceil(sb.bottom - body.getBoundingClientRect().top + 18) + 'px';
+    if (!body || el.dataset.mode !== 'tablet') return;
+    // on tablets the slogan could cover the title: then the title starts 18px below the slogan
+    // one pass: the slogan keeps the place it had before the title moved, so nothing keeps shifting
+    if (!covers()) return;
+    const h0 = box.clientHeight;
+    const gap = sloganBottom() + 18 - textRect(body.querySelector('.eyebrow')).top;
+    body.style.paddingTop = Math.ceil(Math.max(gap, 8)) + 'px';
+    layoutSlogan(box, el, undefined, undefined, h0);
+  };
+  const run = () => {
+    if (box.clientWidth + 'x' + box.clientHeight === size) return;   // our own adjustment
+    fit();
+    size = box.clientWidth + 'x' + box.clientHeight;
   };
   const ro = new ResizeObserver(run);
   ro.observe(box);
-  document.fonts?.ready.then(run);
+  const again = () => { size = ''; run(); };
+  document.fonts?.ready.then(again);
   run();
-  return () => ro.disconnect();
+  const t = setTimeout(again, 2200);   // once more after the entrance animation
+  return () => { ro.disconnect(); clearTimeout(t); };
 }
