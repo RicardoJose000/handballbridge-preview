@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>/* Option A is the desktop version: phones get the desktop page zoomed out */(function(){try{var q=new URLSearchParams(location.search).get('plan');var p=q||localStorage.getItem('hbb.plan')||'a';if(p!=='b')document.querySelector('meta[name=viewport]').setAttribute('content','width=1280');}catch(e){}})();</script>
+  <title>HandballBridge · Preview</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Working preview of the completed HandballBridge platform: registration, email verification, child profiles, consents, seven languages and the administration portal. Fictional demo data only.">
+  <meta name="theme-color" content="#081735">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=Marck+Script&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preload" as="image" href="assets/img/hero.jpg">
+</head>
+<body class="plan-a">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar" id="topbar">
+    <a class="brandlink" href="#/" aria-label="HandballBridge">
+      <span class="brand">
+        <svg class="arc" viewBox="0 0 1000 225" aria-hidden="true">
+          <defs>
+            <linearGradient id="gGold" x1=".13" x2=".73" y1=".02" y2="1"><stop offset="0" stop-color="#b77b12"/><stop offset=".24" stop-color="#ffd747"/><stop offset=".46" stop-color="#fff5a2"/><stop offset=".67" stop-color="#ffdb51"/><stop offset="1" stop-color="#c68a12"/></linearGradient>
+            <linearGradient id="gUnder" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffeb73"/><stop offset=".35" stop-color="#edb83b"/><stop offset=".8" stop-color="#a66c0a"/><stop offset="1" stop-color="#f9d34b"/></linearGradient>
+          </defs>
+          <path d="M 20 205 C 210 132 328 29 485 19 C 665 1 811 83 981 204 C 802 114 650 48 493 53 C 335 56 206 154 20 205 Z" fill="url(#gGold)"/>
+          <path d="M 164 188 C 307 130 389 79 502 73 C 667 63 807 139 941 203 C 792 152 652 96 503 101 C 388 104 294 151 164 188 Z" fill="url(#gUnder)"/>
+          <path class="shine" d="M 135 165 C 304 95 388 38 495 37 C 644 30 778 95 896 159" fill="none" stroke="#fff3a1" stroke-width="3" opacity=".72"/>
+        </svg>
+        <span class="word">Handball<b>Bridge</b></span>
+      </span>
+      <span class="tagline">YOUNG TALENTS. STRONGER TOMORROW.</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <div class="top-actions">
+      <div class="langsel" id="langsel"></div>
+      <a class="btn btn-gold btn-sm" id="signBtn" href="#/login"></a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="nav"><span></span><span></span></button>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1"></main>
+
+  <div class="demobar" id="demobar" role="region" aria-label="Preview controls">
+    <span class="db-label"><i></i>Preview</span>
+    <div class="planswitch" role="radiogroup" aria-label="Offer">
+      <button role="radio" data-plan="a"><b>Option A</b><small>600 EUR · spec</small></button>
+      <button role="radio" data-plan="b"><b>Option B</b><small>950 EUR · + 8 extras</small></button>
+    </div>
+    <button class="db-btn" id="extrasBtn" aria-expanded="false">What is in B?</button>
+    <button class="db-btn inbox-btn" id="inboxBtn" aria-controls="inbox">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5 12 13l8.5-5.5"/></svg>
+      <span class="inbox-label">Demo inbox</span><span class="badge" id="inboxBadge" hidden>0</span>
+    </button>
+    <button class="db-btn" id="resetBtn" title="Reset all demo data">Reset</button>
+  </div>
+  <div class="extras-pop" id="extrasPop" hidden></div>
+
+  <aside class="inbox" id="inbox" aria-label="Demo inbox" aria-hidden="true">
+    <div class="inbox-head">
+      <div><h2 id="inboxTitle">Demo inbox</h2><p>noreply@hb-talents.com → every recipient</p></div>
+      <button class="icon-btn" data-inbox-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="inbox-body"><ul class="mail-list" id="mailList"></ul><article class="mail-view" id="mailView" hidden></article></div>
+  </aside>
+  <div class="inbox-scrim" data-inbox-close></div>
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
