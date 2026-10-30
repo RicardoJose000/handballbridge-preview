@@ -790,7 +790,8 @@ function sloganEditor(box, l) {
       </div></div>
       <form class="form" id="slogForm">
         ${[0, 1, 2].map(i => `<div class="field"><label for="sl${i}">Line ${i + 1}</label><input class="input sm" id="sl${i}" value="${esc(lines[i])}" placeholder="${esc(sloganBase(l)[i])}"></div>`).join('')}
-        <div class="field"><label>Font</label><div class="fontpick" id="fontPick">${SLOGAN_FONTS.map(f => `<button type="button" class="fp ${f.id === st.font ? 'on' : ''}" data-f="${f.id}" style="font-family:${esc(f.css)};font-style:${f.italic ? 'italic' : 'normal'}"><b>${esc(lines[0] || 'Isti sport.')}</b><small>${esc(f.name)}${f.cy ? '' : ' · no Cyrillic'}</small></button>`).join('')}</div></div>
+        <div class="field"><label>Font</label><div class="fontpick" id="fontPick">${SLOGAN_FONTS.map(f => `<button type="button" class="fp ${f.id === st.font ? 'on' : ''}" data-f="${f.id}" style="font-family:${esc(f.css)};font-style:${f.italic ? 'italic' : 'normal'}"><b>${esc(lines[0] || 'Isti sport.')}</b><small>${esc(f.name)}${f.cy ? '' : ' · no Cyrillic'}</small></button>`).join('')}</div>
+          <label class="check inline boldsw"><input type="checkbox" id="slBold" ${st.bold ? 'checked' : ''}><span><b>Bold</b> (e.g. Caveat Bold, Inter ExtraBold, Montserrat ExtraBold)</span></label></div>
         <div class="field"><label>Colour</label><div class="colpick">${SLOGAN_COLORS.map(([c, n]) => `<button type="button" class="cp ${c === st.color ? 'on' : ''}" data-c="${c}" title="${n}" style="--c:${c}"><i></i>${n}</button>`).join('')}</div></div>
         <div class="sliders">${[['x', 'Left / right'], ['y', 'Up / down'], ['w', 'Size'], ['rot', 'Rotation']].map(([k, n]) => `<label class="sl"><span>${n} <b id="v_${k}"></b></span><input type="range" id="r_${k}"></label>`).join('')}</div>
         <p class="muted small" id="spNote"></p>
@@ -829,6 +830,9 @@ function sloganEditor(box, l) {
   styleSlogan(el, st);
   draw();
   $$('[data-f]', box).forEach(b => b.addEventListener('click', () => { st.font = b.dataset.f; $$('[data-f]', box).forEach(x => x.classList.toggle('on', x === b)); styleSlogan(el, st); setTimeout(draw, 300); document.fonts?.ready.then(draw); }));
+  const boldPreview = () => $$('.fp b', box).forEach(x => { const f = SLOGAN_FONTS.find(y => y.id === x.parentElement.dataset.f); x.style.fontWeight = st.bold ? String(f.bold || 700) : '400'; });
+  boldPreview();
+  $('#slBold', box).addEventListener('change', e => { st.bold = e.target.checked; boldPreview(); styleSlogan(el, st); setTimeout(draw, 200); });
   $$('.cp', box).forEach(b => b.addEventListener('click', () => { st.color = b.dataset.c; $$('.cp', box).forEach(x => x.classList.toggle('on', x === b)); styleSlogan(el, st); }));
   const ro = new ResizeObserver(draw);
   ro.observe(wrap);
@@ -853,7 +857,7 @@ function sloganEditor(box, l) {
   el.addEventListener('pointerup', () => { drag = null; });
   $('#slogReset', box).addEventListener('click', () => {
     cfg[mode] = { ...SLOGAN_DEFAULT[mode] };
-    st.font = 'original'; st.color = '#FFFFFF';
+    st.font = 'original'; st.color = '#FFFFFF'; st.bold = false; $('#slBold', box).checked = false; boldPreview();
     $$('[data-f]', box).forEach(x => x.classList.toggle('on', x.dataset.f === 'original'));
     $$('.cp', box).forEach(x => x.classList.toggle('on', x.dataset.c === '#FFFFFF'));
     styleSlogan(el, st); draw();
@@ -868,7 +872,7 @@ function sloganEditor(box, l) {
     });
     const round = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Math.round(v * 1000) / 1000]));
     db.content.sloganPos = { desktop: round(cfg.desktop), tablet: round(cfg.tablet), mobile: round(cfg.mobile) };
-    db.content.sloganStyle = { font: st.font, color: st.color };
+    db.content.sloganStyle = { font: st.font, color: st.color, bold: st.bold };
     save(); setOverrides(db.overrides);
     log('admin', actor, `Slogan saved (text ${l}, position for desktop, tablet and phone)`);
     toast('Slogan saved. It is live on the homepage.');

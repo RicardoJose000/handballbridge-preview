@@ -795,3 +795,6 @@ body .sp-stage .sp-slogan { position: absolute; pointer-events: auto; cursor: gr
 .cp { display: inline-flex; gap: 7px; align-items: center; padding: 6px 11px 6px 7px; border-radius: 999px; border: 1px solid #C9D5E6; font-size: 13px; font-weight: 600; background: #fff; }
 .cp i { width: 18px; height: 18px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
 .cp.on { border-color: var(--navy); box-shadow: 0 0 0 2px rgba(8,23,53,.15); }
+
+.boldsw { margin-top: 10px; font-size: 13.5px; }
+.fp b { font-weight: 400; }

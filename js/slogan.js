@@ -14,19 +14,19 @@ export const SLOGAN_DEFAULT = {
 // fonts the administrator can choose; cy = also has Cyrillic letters (Serbian, Macedonian)
 export const SLOGAN_FONTS = [
   { id: 'original', name: 'Original (as on your site)', css: '"Brush Script MT", "Segoe Script", "URW Chancery L", "Apple Chancery", cursive', italic: true, cy: true },
-  { id: 'marck', name: 'Marck Script', css: '"Marck Script", cursive', g: 'Marck+Script', cy: true },
-  { id: 'greatvibes', name: 'Great Vibes', css: '"Great Vibes", cursive', g: 'Great+Vibes', cy: true },
-  { id: 'caveat', name: 'Caveat', css: '"Caveat", cursive', g: 'Caveat:wght@600', cy: true },
-  { id: 'pacifico', name: 'Pacifico', css: '"Pacifico", cursive', g: 'Pacifico', cy: true },
-  { id: 'lobster', name: 'Lobster', css: '"Lobster", cursive', g: 'Lobster', cy: true },
+  { id: 'caveat', name: 'Caveat', css: '"Caveat", cursive', g: 'Caveat:wght@400;700', bold: 700, cy: true },
+  { id: 'kalam', name: 'Kalam', css: '"Kalam", cursive', g: 'Kalam:wght@400;700', bold: 700 },
   { id: 'badscript', name: 'Bad Script', css: '"Bad Script", cursive', g: 'Bad+Script', cy: true },
-  { id: 'dancing', name: 'Dancing Script', css: '"Dancing Script", cursive', g: 'Dancing+Script:wght@600' },
   { id: 'kaushan', name: 'Kaushan Script', css: '"Kaushan Script", cursive', g: 'Kaushan+Script' },
-  { id: 'allura', name: 'Allura', css: '"Allura", cursive', g: 'Allura' },
-  { id: 'satisfy', name: 'Satisfy', css: '"Satisfy", cursive', g: 'Satisfy' }
+  { id: 'marker', name: 'Permanent Marker', css: '"Permanent Marker", cursive', g: 'Permanent+Marker' },
+  { id: 'knewave', name: 'Knewave', css: '"Knewave", cursive', g: 'Knewave' },
+  { id: 'arial', name: 'Arial', css: 'Arial, "Helvetica Neue", Helvetica, sans-serif', bold: 700, cy: true },
+  { id: 'inter', name: 'Inter', css: '"Inter", Arial, sans-serif', g: 'Inter:wght@400;800', bold: 800, cy: true },
+  { id: 'roboto', name: 'Roboto', css: '"Roboto", Arial, sans-serif', g: 'Roboto:wght@400;700', bold: 700, cy: true },
+  { id: 'montserrat', name: 'Montserrat', css: '"Montserrat", Arial, sans-serif', g: 'Montserrat:wght@400;800', bold: 800, cy: true }
 ];
 export const SLOGAN_COLORS = [['#FFFFFF', 'White'], ['#F5DB67', 'Gold'], ['#FFF2C2', 'Light gold'], ['#DCE6FA', 'Light blue']];
-export const sloganStyle = () => ({ font: 'original', color: '#FFFFFF', ...db.content.sloganStyle });
+export const sloganStyle = () => ({ font: 'original', color: '#FFFFFF', bold: false, ...db.content.sloganStyle });
 const loaded = new Set();
 export function loadFont(id) {
   const f = SLOGAN_FONTS.find(x => x.id === id);
@@ -43,6 +43,8 @@ export function styleSlogan(el, st = sloganStyle()) {
   const inner = el.firstElementChild;
   inner.style.fontFamily = f.css;
   inner.style.fontStyle = f.italic ? 'italic' : 'normal';
+  // Bold: Caveat Bold, Inter ExtraBold, Montserrat ExtraBold ... (fonts without a bold cut are thickened by the browser)
+  inner.style.fontWeight = st.bold ? String(f.bold || 700) : (f.italic ? '500' : '400');
   inner.style.color = st.color;
 }
 export const sloganCfg = () => {
