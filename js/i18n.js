@@ -82,7 +82,7 @@ const T = {
   stage1: ['STEP 1 · PARENT ACCOUNT', 'ETAPA 1 · RODITELJSKI RAČUN', 'KORAK 1 · RODITELJSKI RAČUN', 'KORAK 1 · RODITELJSKI NALOG', 'ЧЕКОР 1 · РОДИТЕЛСКИ ПРОФИЛ', 'HAPI 1 · LLOGARIA E PRINDIT'],
   stage1Adult: ['STEP 1 · PLAYER ACCOUNT', 'ETAPA 1 · RAČUN IGRAČA', 'KORAK 1 · RAČUN IGRAČA', 'KORAK 1 · NALOG IGRAČA', 'ЧЕКОР 1 · ПРОФИЛ НА ИГРАЧ', 'HAPI 1 · LLOGARIA E LOJTARIT'],
   adultTitle: ['Player registration (18+)', 'Registracija igrača (18+)', 'Registracija igrača (18+)', 'Registracija igrača (18+)', 'Регистрација на играч (18+)', 'Regjistrimi i lojtarit (18+)'],
-  adultSub: ['Create your own account. You manage your profile yourself.', 'Napravite vlastiti račun. Svojim profilom upravljate sami.', 'Izradite vlastiti račun. Svojim profilom upravljate sami.', 'Napravite sopstveni nalog. Svojim profilom upravljate sami.', 'Креирајте свој профил. Со профилот управувате сами.', 'Krijoni llogarinë tuaj. Profilin e menaxhoni vetë.'],
+  adultSub: ['Persons aged 18+ may register here; players without parents.', 'Ovdje se smiju registrovati osobe sa 18+, igrači bez roditelja.', 'Ovdje se smiju registrirati osobe s 18+, igrači bez roditelja.', 'Ovde se smeju registrovati osobe sa 18+, igrači bez roditelja.', 'Тука можат да се регистрираат лица со 18+, играчи без родители.', 'Këtu mund të regjistrohen personat 18+, lojtarë pa prindër.'],
   firstName: ['First name', 'Ime', 'Ime', 'Ime', 'Име', 'Emri'],
   lastName: ['Last name', 'Prezime', 'Prezime', 'Prezime', 'Презиме', 'Mbiemri'],
   birthDate: ['Date of birth', 'Datum rođenja', 'Datum rođenja', 'Datum rođenja', 'Датум на раѓање', 'Data e lindjes'],

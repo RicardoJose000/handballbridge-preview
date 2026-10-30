@@ -798,3 +798,6 @@ body .sp-stage .sp-slogan { position: absolute; pointer-events: auto; cursor: gr
 
 .boldsw { margin-top: 10px; font-size: 13.5px; }
 .fp b { font-weight: 400; }
+
+.cit-sep { height: 1px; margin: 6px 8px; background: var(--line); }
+.cit-results { max-height: 320px; overflow-y: auto; }

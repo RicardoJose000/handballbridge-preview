@@ -7,6 +7,8 @@ import { ORIGIN } from './site-data.js';
 const KEY = 'hbb.db.v1';
 const SKEY = 'hbb.session.v1';
 export const DOC_VERSION = '2026-10';
+// adults (18+) may register at any age; the generations 2008 to 2013 apply to children
+export const ADULT_GROUP = '18+';
 // version of the legal texts; the administrator starts a new one when the texts change
 export const docVersion = () => db.content?.legalVersion || DOC_VERSION;
 export const SEASON = '2026/27';
@@ -172,7 +174,7 @@ export function day(v) {
 }
 export function groupOf(p) {
   const y = birthYear(p);
-  return y <= 2009 ? '2008 / 2009' : y <= 2011 ? '2010 / 2011' : '2012 / 2013';
+  return y < 2008 ? ADULT_GROUP : y <= 2009 ? '2008 / 2009' : y <= 2011 ? '2010 / 2011' : '2012 / 2013';
 }
 export function ageOn(birth, at = new Date()) {
   const d = day(birth);

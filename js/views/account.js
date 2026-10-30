@@ -155,7 +155,7 @@ function questionnaire(main, me, existing) {
       <div class="grid2">
         ${field('name', t('qName'), { value: val('name', adult ? `${me.first} ${me.last}` : '') })}
         ${selectField('gender', t('qGender'), [['F', t('female')], ['M', t('male')]], { value: val('gender') })}
-        ${field('birth', t('birthDate'), { type: 'date', value: val('birth', adult ? me.birth : ''), attrs: 'min="2008-01-01" max="2013-12-31"' })}
+        ${field('birth', t('birthDate'), { type: 'date', value: val('birth', adult ? me.birth : ''), attrs: adult ? `min="1940-01-01" max="${new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().slice(0, 10)}"` : 'min="2008-01-01" max="2013-12-31"' })}
         ${field('place', t('qPlace'), { value: val('place') })}
         ${selectField('birthCountry', t('qBirthCountry'), opts, { value: val('birthCountry') })}
         ${selectField('residence', t('residence'), opts, { value: val('residence', me.residence), required: false })}
@@ -200,8 +200,9 @@ function questionnaire(main, me, existing) {
   };
   const showMatches = () => {
     const q = cs.value.trim().toLocaleLowerCase();
-    const list = (q ? opts.filter(([c, n]) => n.toLocaleLowerCase().includes(q) || c.toLowerCase() === q) : opts.filter(([c]) => ORIGIN.includes(c))).filter(([c]) => !citizens.includes(c)).slice(0, 8);
-    cr.innerHTML = list.map(([c, n]) => `<li role="option"><button type="button" data-add="${c}">${FLAG[c] ? flag(FLAG[c], 'sm') : `<span class="cc">${c}</span>`}${esc(n)}</button></li>`).join('');
+    const ordered = [...opts.filter(([c]) => ORIGIN.includes(c)), ...opts.filter(([c]) => !ORIGIN.includes(c))];
+    const list = (q ? ordered.filter(([c, n]) => n.toLocaleLowerCase().includes(q) || c.toLowerCase() === q) : ordered).filter(([c]) => !citizens.includes(c));
+    cr.innerHTML = list.map(([c, n], i) => `${!q && i === ORIGIN.filter(o => !citizens.includes(o)).length && i ? '<li class="cit-sep" aria-hidden="true"></li>' : ''}<li role="option"><button type="button" data-add="${c}">${FLAG[c] ? flag(FLAG[c], 'sm') : `<span class="cc">${c}</span>`}${esc(n)}</button></li>`).join('');
     cr.hidden = !list.length; cs.setAttribute('aria-expanded', String(!cr.hidden));
   };
   drawChips();
@@ -235,7 +236,7 @@ function questionnaire(main, me, existing) {
     if (v.clubEmail && !validEmail(v.clubEmail)) { fieldError(f, 'clubEmail', t('vEmail')); bad = true; }
     if (v.birth) {
       const y = +v.birth.slice(0, 4), age = ageOn(v.birth);
-      if (y < 2008 || y > 2013) { fieldError(f, 'birth', t('vGroup')); bad = true; }
+      if (!adult && (y < 2008 || y > 2013)) { fieldError(f, 'birth', t('vGroup')); bad = true; }
       else if (!adult && age >= 18) { fieldError(f, 'birth', t('vMinor')); bad = true; }
       else if (adult && age < 18) { fieldError(f, 'birth', t('vAdultOnly')); bad = true; }
     }

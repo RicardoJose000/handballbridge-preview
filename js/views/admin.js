@@ -1,5 +1,5 @@
 // Administration portal (specification section 8). Admin screens are in English.
-import { db, day, save, uid, session, currentAdmin, userById, userByEmail, verifyPassword, issueCode, checkCode, lockedFor, loginFailed, loginOk, log, LOG_TYPES, LOG_RETENTION_DAYS, playersOf, playerById, playerConsent, consentsOf, playerStatus, groupOf, birthYear, deletePlayer, deleteAccount, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_IDLE, SEASON, DOC_VERSION, docVersion } from '../store.js';
+import { db, day, save, uid, session, currentAdmin, userById, userByEmail, verifyPassword, issueCode, checkCode, lockedFor, loginFailed, loginOk, log, LOG_TYPES, LOG_RETENTION_DAYS, playersOf, playerById, playerConsent, consentsOf, playerStatus, groupOf, birthYear, deletePlayer, deleteAccount, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_IDLE, SEASON, DOC_VERSION, docVersion, ADULT_GROUP } from '../store.js';
 import { t, LANGS, KEYS, baseText, SITE_KEYS, site, setOverrides, country, DERIVED, fmtD, fmtDT, slogan, sloganBase, legalText, consentText } from '../i18n.js';
 import { COUNTRIES, ORIGIN, GROUPS } from '../site-data.js';
 import { isB } from '../plan.js';
@@ -160,7 +160,8 @@ function dashboard(adm) {
     const sel = pl.filter(inR);
     const byRes = {}; sel.forEach(p => { byRes[p.residence] = (byRes[p.residence] || 0) + 1; });
     const resRows = Object.entries(byRes).sort((x, y) => y[1] - x[1]);
-    const years = [2008, 2009, 2010, 2011, 2012, 2013].map(y => ({ l: String(y), v: pl.filter(p => birthYear(p) === y).length }));
+    const older = pl.filter(p => birthYear(p) < 2008).length;
+    const years = [...(older ? [{ l: 'Before 2008', v: older }] : []), ...[2008, 2009, 2010, 2011, 2012, 2013].map(y => ({ l: String(y), v: pl.filter(p => birthYear(p) === y).length }))];
     const stc = { active: 0, unverified: 0, inactive: 0, noconsent: 0 }; pl.forEach(p => { stc[playerStatus(p)]++; });
     const unverAcc = db.users.filter(u => u.role !== 'admin' && !u.verified).length;
     if (!isB()) {
@@ -169,7 +170,7 @@ function dashboard(adm) {
           <table class="tbl"><thead><tr><th>Country</th><th class="r">Registrations</th></tr></thead><tbody>${resRows.slice(0, 8).map(([c, v]) => `<tr><td>${esc(cn(c))}</td><td class="r"><b>${v}</b></td></tr>`).join('') || '<tr><td colspan="2" class="muted">No registrations in this period.</td></tr>'}
           ${resRows.length > 8 ? `<tr><td>Other countries</td><td class="r"><b>${resRows.slice(8).reduce((s, [, v]) => s + v, 0)}</b></td></tr>` : ''}</tbody></table></div>
         <div class="card"><h3>Players by year of birth</h3><p class="muted small">All profiles</p>
-          <table class="tbl"><thead><tr><th>Year</th><th>Group</th><th class="r">Players</th></tr></thead><tbody>${years.map(y => `<tr><td>${y.l}</td><td>${groupOf({ birth: y.l })}</td><td class="r"><b>${y.v}</b></td></tr>`).join('')}</tbody></table></div>
+          <table class="tbl"><thead><tr><th>Year</th><th>Group</th><th class="r">Players</th></tr></thead><tbody>${years.map(y => `<tr><td>${y.l}</td><td>${y.l === 'Before 2008' ? ADULT_GROUP : groupOf({ birth: y.l })}</td><td class="r"><b>${y.v}</b></td></tr>`).join('')}</tbody></table></div>
         <div class="card"><h3>Status</h3><table class="tbl"><tbody>
           <tr><td>Active player profiles</td><td class="r"><b>${stc.active}</b></td></tr><tr><td>Deactivated</td><td class="r"><b>${stc.inactive}</b></td></tr>
           <tr><td>Consent withdrawn</td><td class="r"><b>${stc.noconsent}</b></td></tr><tr><td>Unverified accounts (email not confirmed)</td><td class="r"><b>${unverAcc}</b></td></tr></tbody></table></div>
@@ -216,8 +217,8 @@ function players(adm) {
     `<button class="btn btn-ghost btn-sm" id="ex1">${icon.download} CSV</button><button class="btn btn-ghost btn-sm" id="ex2">${icon.download} Excel</button>`) +
     `<div class="card filters" id="fl">
       <label class="ff wide"><span>First and last name or ID</span><span class="search">${icon.search}<input class="input sm" id="q" value="${esc(filt.q)}" placeholder="Search a player"></span></label>
-      <label class="ff"><span>Year of birth</span><select class="input sm" id="year"><option value="">All</option>${[2008, 2009, 2010, 2011, 2012, 2013].map(y => `<option ${String(y) === filt.year ? 'selected' : ''}>${y}</option>`).join('')}</select></label>
-      <label class="ff"><span>Birth-year group</span><select class="input sm" id="group"><option value="">All</option>${GROUPS.map(g => `<option ${g === filt.group ? 'selected' : ''}>${g}</option>`).join('')}</select></label>
+      <label class="ff"><span>Year of birth</span><select class="input sm" id="year"><option value="">All</option>${[...new Set([...db.players.map(birthYear), 2008, 2009, 2010, 2011, 2012, 2013])].sort((a, b) => a - b).map(y => `<option ${String(y) === filt.year ? 'selected' : ''}>${y}</option>`).join('')}</select></label>
+      <label class="ff"><span>Birth-year group</span><select class="input sm" id="group"><option value="">All</option>${[...GROUPS, ADULT_GROUP].map(g => `<option ${g === filt.group ? 'selected' : ''}>${g}</option>`).join('')}</select></label>
       <label class="ff"><span>Gender</span><select class="input sm" id="gender"><option value="">All</option><option value="F" ${filt.gender === 'F' ? 'selected' : ''}>Female</option><option value="M" ${filt.gender === 'M' ? 'selected' : ''}>Male</option></select></label>
       ${countrySel('birthCountry', filt.birthCountry, 'Country of birth')}${countrySel('residence', filt.residence, 'Country of residence')}
       <label class="ff"><span>Playing hand</span><select class="input sm" id="hand"><option value="">All</option><option value="L" ${filt.hand === 'L' ? 'selected' : ''}>Left</option><option value="R" ${filt.hand === 'R' ? 'selected' : ''}>Right</option></select></label>
@@ -669,7 +670,7 @@ function eventModal(done) {
   openModal({
     title: 'New camp or event', wide: true, sub: 'Invitations go to the parent (or the adult player) in their own language.',
     html: `<form id="evf" class="form" novalidate><div class="grid2"><div class="field"><label>Title</label><input class="input" name="title" placeholder="Selection camp 2012/13 boys"></div><div class="field"><label>Place</label><input class="input" name="place" placeholder="Zagreb"></div><div class="field"><label>Date</label><input class="input" type="date" name="date" min="${new Date().toISOString().slice(0, 10)}"></div>
-      <div class="field"><label>Birth-year group</label><select class="input" name="group"><option value="">All</option>${GROUPS.map(g => `<option>${g}</option>`).join('')}</select></div>
+      <div class="field"><label>Birth-year group</label><select class="input" name="group"><option value="">All</option>${[...GROUPS, ADULT_GROUP].map(g => `<option>${g}</option>`).join('')}</select></div>
       <div class="field"><label>Gender</label><select class="input" name="gender"><option value="">All</option><option value="F">Female</option><option value="M">Male</option></select></div>
       <div class="field"><label>Citizenship</label><select class="input" name="cit"><option value="">Any</option>${ORIGIN.map(c => `<option value="${c}">${esc(cn(c))}</option>`).join('')}</select></div></div>
       <p class="invcount" id="ic"></p>
@@ -701,7 +702,7 @@ function eventModal(done) {
 function announce(adm) {
   adm.innerHTML = head('Announcements by email', 'Send news to a chosen group. Every family receives it in its own language, with the text you write for that language.', '', true) +
     `<div class="grid-2"><form class="card form" id="anf" novalidate><h3>New announcement</h3>
-      <div class="grid2"><div class="field"><label>Birth-year group</label><select class="input" name="group"><option value="">All</option>${GROUPS.map(g => `<option>${g}</option>`).join('')}</select></div>
+      <div class="grid2"><div class="field"><label>Birth-year group</label><select class="input" name="group"><option value="">All</option>${[...GROUPS, ADULT_GROUP].map(g => `<option>${g}</option>`).join('')}</select></div>
       <div class="field"><label>Country of residence</label><select class="input" name="res"><option value="">All</option>${['NO', 'DE', 'AT', 'CH', 'SE', 'DK', ...ORIGIN].map(c => `<option value="${c}">${esc(cn(c))}</option>`).join('')}</select></div></div>
       <div class="field"><label>Language version</label><select class="input" id="anl">${LANGS.map(l => `<option value="${l.code}">${l.name}</option>`).join('')}</select></div>
       <div class="field"><label>Subject</label><input class="input" id="ans"></div><div class="field"><label>Message</label><textarea class="input" id="anb" rows="5"></textarea></div>

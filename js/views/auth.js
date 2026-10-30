@@ -71,7 +71,6 @@ export function renderRegister(main, [kind]) {
       const d = day(v.birth);
       if (isNaN(d) || d > new Date()) { fieldError(f, 'birth', t('vDate')); bad = true; }
       else if (ageOn(v.birth) < 18) { fieldError(f, 'birth', t('vAdultOnly')); bad = true; }
-      else if (adult && (d.getFullYear() < 2008 || d.getFullYear() > 2013)) { fieldError(f, 'birth', t('vGroup')); bad = true; }
     }
     if (!validEmail(v.email)) { fieldError(f, 'email', t('vEmail')); bad = true; }
     else if (userByEmail(v.email)) { fieldError(f, 'email', t('vEmailTaken')); bad = true; }
